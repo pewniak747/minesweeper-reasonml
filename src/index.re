@@ -1,3 +1,3 @@
 [%bs.raw {|require('./index.css')|}];
 
-ReactDOMRe.renderToElementWithId(<App message="Welcome to React and Reason" />, "root");
+ReactDOMRe.renderToElementWithId(<App message="Minesweeper in ReasonML & React" />, "root");

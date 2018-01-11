@@ -12,10 +12,8 @@ let make = (~message, _children) => {
         <img src=logo className="App-logo" alt="logo" />
         <h2> (ReasonReact.stringToElement(message)) </h2>
       </div>
-      <p className="App-intro">
-        (ReasonReact.stringToElement("To get started, edit"))
-        <code> (ReasonReact.stringToElement(" src/app.re ")) </code>
-        (ReasonReact.stringToElement("and save to reload."))
-      </p>
+      <div className="App-intro">
+        <Game />
+      </div>
     </div>
 };

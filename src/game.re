@@ -67,6 +67,19 @@ let initializeState = () => {
   { width, height, fields: fieldsWithData };
 };
 
+
+let neighbourDiff = cartesian([-1, 0, 1], [-1, 0, 1]) |> List.filter(e => !(fst(e) == 0 && snd(e) == 0));
+assert(List.length(neighbourDiff) == 8);
+let adjacentMinesSelector = (state, field) => {
+  let { width, height, fields } = state;
+  let (x, y) = field;
+  let neighbourCandidates = List.map(((dx, dy)) => (x + dx, y + dy), neighbourDiff);
+  let neighbours = List.filter(((x, y)) => x >= 0 && x < width && y >= 0 && y < height, neighbourCandidates);
+  let neighbourData = List.map((f) => FieldsMap.find(f, fields), neighbours);
+  let minedNeighbours = List.filter(((contents, _)) => contents == Mine, neighbourData);
+  List.length(minedNeighbours);
+};
+
 let component = ReasonReact.reducerComponent("Game");
 
 let make = _children => {
@@ -98,7 +111,7 @@ let make = _children => {
             | data => {
               let contents = switch (data) {
                 | (_, Hidden) => ""
-                | (Safe, Revealed) => "1"
+                | (Safe, Revealed) => adjacentMinesSelector(state, field) |> string_of_int
                 | (Mine, Revealed) => {js|💥|js}
               };
               let onClick = _event => send(Reveal(field));

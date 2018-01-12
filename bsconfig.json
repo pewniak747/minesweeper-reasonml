@@ -5,6 +5,7 @@
   ],
   "bs-dependencies": [
     "reason-react",
+    "re-classnames",
     "bs-jest"
   ],
   "reason": {

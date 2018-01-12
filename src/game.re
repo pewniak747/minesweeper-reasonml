@@ -139,15 +139,19 @@ let make = _children => {
           let field = (x, y);
           switch (FieldsMap.find(field, state.fields)) {
             | exception Not_found => ReasonReact.nullElement
-            | data => {
-              let contents = switch (data) {
+            | ((contents, visibility)) => {
+              let buttonContent = switch ((contents, visibility)) {
                 | (_, Hidden) => ""
                 | (Safe, Revealed) => adjacentMinesSelector(state, field) |> string_of_int
                 | (Mine, Revealed) => {js|💥|js}
               };
               let onClick = _event => send(Reveal(field));
-              <div className="game__board-field" key={string_of_int(x)}>
-                <button _type="button" onClick>{str(contents)}</button>
+              let className = Cn.make([
+                "game__board-field",
+                "game__board-field--revealed" |> Cn.ifBool(visibility == Revealed)
+              ]);
+              <div className key={string_of_int(x)}>
+                <button _type="button" onClick>{str(buttonContent)}</button>
               </div>
               }
           }

@@ -16,6 +16,7 @@ module OrderedFields = {
 };
 
 module FieldsMap = Map.Make(OrderedFields);
+module FieldsSet = Set.Make(OrderedFields);
 
 type action = Init | Reveal(field);
 
@@ -32,20 +33,41 @@ let rec range = (start: int, end_: int) =>
     [start, ...range(start + 1, end_)];
   };
 
-let component = ReasonReact.reducerComponent("Game");
-
 let cartesian = (l1, l2) => List.concat(List.map(e => List.map(e' => (e,e'), l2), l1));
+
+let compareFst = ((fst1: int, _), (fst2: int, _)) => Pervasives.compare(fst1, fst2);
+
+let shuffle = (d) => {
+  let nd = List.map((c) => (Random.bits(), c), d);
+  let sond = List.sort(compareFst, nd);
+  List.map(snd, sond)
+};
+
+let rec take = (n, lst) => {
+  switch (n) {
+    | 0 => []
+    | n => [List.hd(lst), ...take(n - 1, List.tl(lst))]
+  };
+};
 
 let initializeState = () => {
   let width = 10;
   let height = 8;
+  let mines = 20;
   let xs = range(0, width);
   let ys = range(0, height);
-  let fs = cartesian(xs, ys);
-  let reduceFields = (acc, field) => FieldsMap.add(field, (Random.bool() ? Mine : Safe, Hidden), acc);
-  let fields = List.fold_left(reduceFields, FieldsMap.empty, fs);
-  { width, height, fields };
+  let fields = cartesian(xs, ys);
+  let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.of_list;
+  let reduceFields = (acc, field) => {
+    let contents = FieldsSet.mem(field, minedFields) ? Mine : Safe;
+    let data = (contents, Hidden);
+    FieldsMap.add(field, data, acc);
+  };
+  let fieldsWithData = List.fold_left(reduceFields, FieldsMap.empty, fields);
+  { width, height, fields: fieldsWithData };
 };
+
+let component = ReasonReact.reducerComponent("Game");
 
 let make = _children => {
   ...component,

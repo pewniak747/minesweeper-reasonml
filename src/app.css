@@ -15,7 +15,7 @@
 }
 
 .App-intro {
-  margin: 20px;
+  margin: 40px 20px;
   display: flex;
 }
 
@@ -79,4 +79,5 @@
   box-shadow: 0 1px 0 #ddd;
   background: #fff;
   border-radius: 5px;
+  font-weight: bold;
 }

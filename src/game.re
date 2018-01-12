@@ -5,6 +5,7 @@ type field = (int, int);
 type fieldVisibility = Hidden | Revealed;
 type fieldContents = Mine | Safe;
 type fieldData = (fieldContents, fieldVisibility);
+type status = Playing | Won | Lost;
 
 module OrderedFields = {
   type t = field;
@@ -80,6 +81,30 @@ let adjacentMinesSelector = (state, field) => {
   List.length(minedNeighbours);
 };
 
+let gameStatusSelector = (state) => {
+  let fields = state.fields;
+  let exploded = FieldsMap.exists((_, data) => {
+    switch (data) {
+      | (Mine, Revealed) => true
+      | _ => false
+    }
+  }, fields);
+  let playing = FieldsMap.exists((_, data) => {
+    switch (data) {
+      | (Safe, Hidden) => true
+      | _ => false
+    }
+  }, fields);
+
+  if (exploded) {
+    Lost
+  } else if (playing) {
+    Playing
+  } else {
+    Won
+  }
+};
+
 let component = ReasonReact.reducerComponent("Game");
 
 let make = _children => {
@@ -89,18 +114,24 @@ let make = _children => {
     switch (action) {
       | Init => ReasonReact.Update(initializeState()) /* TODO: purify the reducer */
       | Reveal(field) => {
-        let data = FieldsMap.find(field, state.fields);
-        let newData = switch (data) {
-          | (contents, _) => (contents, Revealed)
-        };
-        let fields = FieldsMap.add(field, newData, state.fields);
-        /* ReasonReact.SideEffects((_self) => Js.log(field)) */
-        ReasonReact.Update({ ...state, fields });
+        switch (gameStatusSelector(state)) {
+          | Playing => {
+            let data = FieldsMap.find(field, state.fields);
+            let newData = switch (data) {
+              | (contents, _) => (contents, Revealed)
+            };
+            let fields = FieldsMap.add(field, newData, state.fields);
+            ReasonReact.Update({ ...state, fields });
+          }
+          | Won => ReasonReact.NoUpdate
+          | Lost => ReasonReact.NoUpdate
+        }
       }
     },
   render: ({ state, send }) => {
     let xs = range(0, state.width);
     let ys = range(0, state.height);
+    let gameStatus = gameStatusSelector(state);
 
     let rows = Array.of_list @@ List.map(y =>
       <div className="game__board-row" key={string_of_int(y)}>{
@@ -125,10 +156,16 @@ let make = _children => {
       }</div>
     , ys);
 
+    let buttonContents = switch (gameStatus) {
+      | Playing => {js|🙂|js}
+      | Won => {js|😎|js}
+      | Lost => {js|😵|js}
+    };
+
     <div className="game">
       <div className="game__header">
         <button _type="button" className="start-button" onClick={(_evt) => send(Init)}>
-          {str({js|🙂|js})}
+          {str(buttonContents)}
         </button>
       </div>
       <div className="game__board">

@@ -139,26 +139,29 @@ let gameStatusSelector = state => {
 
 let component = ReasonReact.reducerComponent("Game");
 
+let reducer = (action, state) =>
+  switch action {
+  | Init(state) => ReasonReact.Update(state)
+  | Reveal(field) =>
+    switch (gameStatusSelector(state)) {
+    | Playing =>
+      let data = FieldsMap.find(field, state.fields);
+      switch data {
+      | (_, Revealed) => ReasonReact.NoUpdate
+      | (contents, _) =>
+        let newData = (contents, Revealed);
+        let fields = FieldsMap.add(field, newData, state.fields);
+        ReasonReact.Update({...state, fields});
+      };
+    | Won => ReasonReact.NoUpdate
+    | Lost => ReasonReact.NoUpdate
+    }
+  };
+
 let make = _children => {
   ...component,
   initialState: initializeState,
-  reducer: (action, state) =>
-    switch action {
-    | Init(state) => ReasonReact.Update(state)
-    | Reveal(field) =>
-      switch (gameStatusSelector(state)) {
-      | Playing =>
-        let data = FieldsMap.find(field, state.fields);
-        let newData =
-          switch data {
-          | (contents, _) => (contents, Revealed)
-          };
-        let fields = FieldsMap.add(field, newData, state.fields);
-        ReasonReact.Update({...state, fields});
-      | Won => ReasonReact.NoUpdate
-      | Lost => ReasonReact.NoUpdate
-      }
-    },
+  reducer,
   render: ({state, send}) => {
     let xs = range(0, state.width);
     let ys = range(0, state.height);

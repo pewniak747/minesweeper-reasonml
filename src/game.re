@@ -32,15 +32,15 @@ module FieldsMap = Map.Make(OrderedFields);
 
 module FieldsSet = Set.Make(OrderedFields);
 
-type action =
-  | Init
-  | Reveal(field);
-
 type state = {
   width: int,
   height: int,
   fields: FieldsMap.t(fieldData)
 };
+
+type action =
+  | Init(state)
+  | Reveal(field);
 
 let rec range = (start: int, end_: int) =>
   if (start >= end_) {
@@ -142,7 +142,7 @@ let make = _children => {
   initialState: initializeState,
   reducer: (action, state) =>
     switch action {
-    | Init => ReasonReact.Update(initializeState()) /* TODO: purify the reducer */
+    | Init(state) => ReasonReact.Update(state)
     | Reveal(field) =>
       switch (gameStatusSelector(state)) {
       | Playing =>
@@ -209,10 +209,11 @@ let make = _children => {
       | Won => {js|😎|js}
       | Lost => {js|😵|js}
       };
+    let startButtonClick = _evt => send(Init(initializeState()));
     <div className="game">
       <div className="game__header">
         <button
-          _type="button" className="start-button" onClick=(_evt => send(Init))>
+          _type="button" className="start-button" onClick=startButtonClick>
           (str(buttonContents))
         </button>
       </div>

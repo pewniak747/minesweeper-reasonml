@@ -85,8 +85,8 @@ let initialWonState =
 describe("Game.reducer", () => {
   test("Init replaces the state with new one", () => {
     let expectedState = initializeState();
-    let state = reducer(Init(expectedState), initialState);
-    expect(state) |> toEqual(ReasonReact.Update(expectedState));
+    let update = reducer(Init(expectedState), initialState);
+    expect(update) |> toEqual(ReasonReact.Update(expectedState));
   });
   test("Reveal sets a field to Revealed state", () => {
     let action = Reveal((3, 2));
@@ -97,8 +97,8 @@ describe("Game.reducer", () => {
         [|o, o, o, s, o|],
         [|o, o, o, o, x|]
       |]);
-    let state = reducer(action, initialState);
-    expect(state) |> toEqual(ReasonReact.Update(expectedState));
+    let update = reducer(action, initialState);
+    expect(update) |> toEqual(ReasonReact.Update(expectedState));
   });
   test(
     "Reveal sets the field's neighbourhood to Revealed if it has no Mines", () => {
@@ -110,8 +110,8 @@ describe("Game.reducer", () => {
         [|s, s, s, s, o|],
         [|s, s, s, s, x|]
       |]);
-    let state = reducer(action, initialState);
-    expect(state) |> toEqual(ReasonReact.Update(expectedState));
+    let update = reducer(action, initialState);
+    expect(update) |> toEqual(ReasonReact.Update(expectedState));
   });
   test("Reveal sets a Mined field to Revealed state", () => {
     let action = Reveal((2, 1));
@@ -122,8 +122,8 @@ describe("Game.reducer", () => {
         [|o, o, o, o, o|],
         [|o, o, o, o, x|]
       |]);
-    let state = reducer(action, initialState);
-    expect(state) |> toEqual(ReasonReact.Update(expectedState));
+    let update = reducer(action, initialState);
+    expect(update) |> toEqual(ReasonReact.Update(expectedState));
   });
   test("Reveal does nothing if field already Revealed", () => {
     let initialState =
@@ -134,18 +134,18 @@ describe("Game.reducer", () => {
         [|o, o, s, o, x|]
       |]);
     let action = Reveal((2, 3));
-    let state = reducer(action, initialState);
-    expect(state) |> toEqual(ReasonReact.NoUpdate);
+    let update = reducer(action, initialState);
+    expect(update) |> toEqual(ReasonReact.NoUpdate);
   });
   test("Reveal does nothing in Lost state", () => {
     let action = Reveal((3, 0));
-    let state = reducer(action, initialLostState);
-    expect(state) |> toEqual(ReasonReact.NoUpdate);
+    let update = reducer(action, initialLostState);
+    expect(update) |> toEqual(ReasonReact.NoUpdate);
   });
   test("Reveal does nothing in Won state", () => {
     let action = Reveal((3, 1));
-    let state = reducer(action, initialLostState);
-    expect(state) |> toEqual(ReasonReact.NoUpdate);
+    let update = reducer(action, initialLostState);
+    expect(update) |> toEqual(ReasonReact.NoUpdate);
   });
 });
 

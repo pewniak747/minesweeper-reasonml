@@ -67,13 +67,13 @@ let rec take = (n, lst) =>
   | n => [List.hd(lst), ...take(n - 1, List.tl(lst))]
   };
 
-let initializeState = () => {
-  let width = 10;
-  let height = 8;
-  let mines = 20;
+let initializeState = (~width=10, ~height=8, ~mines=20, ()) => {
   let xs = range(0, width);
   let ys = range(0, height);
   let fields = cartesian(xs, ys);
+  if (List.length(fields) <= mines) {
+    failwith("Too many mines for the board");
+  };
   let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.of_list;
   let reduceFields = (acc, field) => {
     let contents = FieldsSet.mem(field, minedFields) ? Mine : Safe;
@@ -88,7 +88,9 @@ let neighbourDiff =
   cartesian([(-1), 0, 1], [(-1), 0, 1])
   |> List.filter(e => ! (fst(e) == 0 && snd(e) == 0));
 
-assert (List.length(neighbourDiff) == 8);
+if (List.length(neighbourDiff) != 8) {
+  failwith("nighbourDiff should contain exactly 8 items");
+};
 
 let adjacentMinesSelector = (state, field) => {
   let {width, height, fields} = state;

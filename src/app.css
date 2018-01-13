@@ -87,7 +87,8 @@
 }
 
 .game__board-field--0 button {
-  color: #ddd;
+  background: transparent;
+  color: transparent;
 }
 
 .game__board-field--1 button {

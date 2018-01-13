@@ -83,5 +83,33 @@
 }
 
 .game__board-field--revealed button {
-  box-shadow: inset 0.5px 1px 0 #ddd;
+  box-shadow: none;
+}
+
+.game__board-field--0 button {
+  color: #ddd;
+}
+
+.game__board-field--1 button {
+  color: blue;
+}
+
+.game__board-field--2 button {
+  color: red;
+}
+
+.game__board-field--3 button {
+  color: green;
+}
+
+.game__board-field--4 button {
+  color: orange;
+}
+
+.game__board-field--5 button,
+.game__board-field--6 button,
+.game__board-field--7 button,
+.game__board-field--8 button
+{
+  color: brown;
 }

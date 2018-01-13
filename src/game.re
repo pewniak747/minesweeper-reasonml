@@ -187,7 +187,14 @@ let make = _children => {
                         Cn.make([
                           "game__board-field",
                           "game__board-field--revealed"
-                          |> Cn.ifBool(visibility == Revealed)
+                          |> Cn.ifBool(visibility == Revealed),
+                          "game__board-field--"
+                          ++ string_of_int(
+                               adjacentMinesSelector(state, field)
+                             )
+                          |> Cn.ifBool(
+                               visibility == Revealed && contents == Safe
+                             )
                         ]);
                       <div className key=(string_of_int(x))>
                         <button _type="button" onClick>

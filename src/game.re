@@ -195,6 +195,34 @@ let reducer = (action, state) =>
     }
   };
 
+module Field = {
+  let component = ReasonReact.statelessComponent("Field");
+  let make = (~mines, ~data, ~field, ~onClick, _children) => {
+    ...component,
+    render: _self => {
+      let buttonContent =
+        switch data {
+        | (_, Hidden) => ""
+        | (Safe, Revealed) => mines |> string_of_int
+        | (Mine, Revealed) => {js|💥|js}
+        };
+      let onClick = _event => onClick(field);
+      let (contents, visibility) = data;
+      let className =
+        Cn.make([
+          "game__board-field",
+          "game__board-field--revealed" |> Cn.ifBool(visibility == Revealed),
+          "game__board-field--"
+          ++ string_of_int(mines)
+          |> Cn.ifBool(visibility == Revealed && contents == Safe)
+        ]);
+      <div className>
+        <button _type="button" onClick> (str(buttonContent)) </button>
+      </div>;
+    }
+  };
+};
+
 let make = _children => {
   ...component,
   initialState: initializeState,
@@ -204,49 +232,23 @@ let make = _children => {
     let ys = range(0, state.height);
     let gameStatus = gameStatusSelector(state);
     let rows =
+      arr @@
       Array.of_list @@
       List.map(
         y =>
           <div className="game__board-row" key=(string_of_int(y))>
             (
-              arr(
-                Array.of_list @@
-                List.map(
-                  x => {
-                    let field = (x, y);
-                    switch (FieldsMap.find(field, state.fields)) {
-                    | exception Not_found => ReasonReact.nullElement
-                    | (contents, visibility) =>
-                      let buttonContent =
-                        switch (contents, visibility) {
-                        | (_, Hidden) => ""
-                        | (Safe, Revealed) =>
-                          adjacentMinesSelector(state, field) |> string_of_int
-                        | (Mine, Revealed) => {js|💥|js}
-                        };
-                      let onClick = _event => send(Reveal(field));
-                      let className =
-                        Cn.make([
-                          "game__board-field",
-                          "game__board-field--revealed"
-                          |> Cn.ifBool(visibility == Revealed),
-                          "game__board-field--"
-                          ++ string_of_int(
-                               adjacentMinesSelector(state, field)
-                             )
-                          |> Cn.ifBool(
-                               visibility == Revealed && contents == Safe
-                             )
-                        ]);
-                      <div className key=(string_of_int(x))>
-                        <button _type="button" onClick>
-                          (str(buttonContent))
-                        </button>
-                      </div>;
-                    };
-                  },
-                  xs
-                )
+              arr @@
+              Array.of_list @@
+              List.map(
+                x => {
+                  let field = (x, y);
+                  let data = FieldsMap.find(field, state.fields);
+                  let onClick = field => send(Reveal(field));
+                  let mines = adjacentMinesSelector(state, field);
+                  <Field field data onClick mines key=(string_of_int(x)) />;
+                },
+                xs
               )
             )
           </div>,
@@ -266,7 +268,7 @@ let make = _children => {
           (str(buttonContents))
         </button>
       </div>
-      <div className="game__board"> (arr(rows)) </div>
+      <div className="game__board"> rows </div>
     </div>;
   }
 };

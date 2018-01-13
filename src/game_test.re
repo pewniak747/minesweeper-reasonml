@@ -88,14 +88,39 @@ describe("Game.reducer", () => {
     let state = reducer(Init(expectedState), initialState);
     expect(state) |> toEqual(ReasonReact.Update(expectedState));
   });
-  test("Reveal switches a field to Revealed state", () => {
-    let action = Reveal((2, 3));
+  test("Reveal sets a field to Revealed state", () => {
+    let action = Reveal((3, 2));
     let expectedState =
       makeState([|
         [|o, o, o, o, o|],
         [|o, o, x, o, o|],
+        [|o, o, o, s, o|],
+        [|o, o, o, o, x|]
+      |]);
+    let state = reducer(action, initialState);
+    expect(state) |> toEqual(ReasonReact.Update(expectedState));
+  });
+  test(
+    "Reveal sets the field's neighbourhood to Revealed if it has no Mines", () => {
+    let action = Reveal((0, 3));
+    let expectedState =
+      makeState([|
+        [|s, s, o, o, o|],
+        [|s, s, x, o, o|],
+        [|s, s, s, s, o|],
+        [|s, s, s, s, x|]
+      |]);
+    let state = reducer(action, initialState);
+    expect(state) |> toEqual(ReasonReact.Update(expectedState));
+  });
+  test("Reveal sets a Mined field to Revealed state", () => {
+    let action = Reveal((2, 1));
+    let expectedState =
+      makeState([|
         [|o, o, o, o, o|],
-        [|o, o, s, o, x|]
+        [|o, o, m, o, o|],
+        [|o, o, o, o, o|],
+        [|o, o, o, o, x|]
       |]);
     let state = reducer(action, initialState);
     expect(state) |> toEqual(ReasonReact.Update(expectedState));

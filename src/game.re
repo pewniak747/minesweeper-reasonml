@@ -67,7 +67,7 @@ let rec take = (n, lst) =>
   | n => [List.hd(lst), ...take(n - 1, List.tl(lst))]
   };
 
-let initializeState = (~width=10, ~height=8, ~mines=20, ()) => {
+let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
   let xs = range(0, width);
   let ys = range(0, height);
   let fields = cartesian(xs, ys);
@@ -92,16 +92,20 @@ if (List.length(neighbourDiff) != 8) {
   failwith("nighbourDiff should contain exactly 8 items");
 };
 
-let adjacentMinesSelector = (state, field) => {
-  let {width, height, fields} = state;
+let fieldNeighboursSelector = (state, field) => {
+  let {width, height} = state;
   let (x, y) = field;
   let neighbourCandidates =
     List.map(((dx, dy)) => (x + dx, y + dy), neighbourDiff);
-  let neighbours =
-    List.filter(
-      ((x, y)) => x >= 0 && x < width && y >= 0 && y < height,
-      neighbourCandidates
-    );
+  List.filter(
+    ((x, y)) => x >= 0 && x < width && y >= 0 && y < height,
+    neighbourCandidates
+  );
+};
+
+let adjacentMinesSelector = (state, field) => {
+  let {fields} = state;
+  let neighbours = fieldNeighboursSelector(state, field);
   let neighbourData = List.map(f => FieldsMap.find(f, fields), neighbours);
   let minedNeighbours =
     List.filter(((contents, _)) => contents == Mine, neighbourData);
@@ -139,6 +143,27 @@ let gameStatusSelector = state => {
 
 let component = ReasonReact.reducerComponent("Game");
 
+let rec accumulateFieldsToReveal = (state, field, acc) => {
+  let mines = adjacentMinesSelector(state, field);
+  let contents = fst(FieldsMap.find(field, state.fields));
+  let accWithField = FieldsSet.add(field, acc);
+  switch (mines, contents) {
+  | (0, Safe) =>
+    let neighbours = fieldNeighboursSelector(state, field);
+    List.fold_left(
+      (acc, neighbour) =>
+        if (FieldsSet.mem(neighbour, acc)) {
+          acc;
+        } else {
+          accumulateFieldsToReveal(state, neighbour, acc);
+        },
+      accWithField,
+      neighbours
+    );
+  | _ => accWithField
+  };
+};
+
 let reducer = (action, state) =>
   switch action {
   | Init(state) => ReasonReact.Update(state)
@@ -148,9 +173,21 @@ let reducer = (action, state) =>
       let data = FieldsMap.find(field, state.fields);
       switch data {
       | (_, Revealed) => ReasonReact.NoUpdate
-      | (contents, _) =>
-        let newData = (contents, Revealed);
-        let fields = FieldsMap.add(field, newData, state.fields);
+      | _ =>
+        let fieldsToReveal =
+          accumulateFieldsToReveal(state, field, FieldsSet.empty);
+        let fields =
+          FieldsMap.mapi(
+            (field, data) =>
+              if (FieldsSet.mem(field, fieldsToReveal)) {
+                switch data {
+                | (contents, _) => (contents, Revealed)
+                };
+              } else {
+                data;
+              },
+            state.fields
+          );
         ReasonReact.Update({...state, fields});
       };
     | Won => ReasonReact.NoUpdate

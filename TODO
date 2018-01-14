@@ -1,0 +1,13 @@
+TODO:
+* extract components
+* mousedown-look of buttons
+* handle double-clicking already revealed fields
+* mobile ready
+* difficulty levels
+
+DONE:
+* colors for different mine amounts
+* automatically reveal neighbours if revealed a 0
+* tests
+* marking the fields
+* reveal fields by double clicking

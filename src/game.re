@@ -281,14 +281,19 @@ let make = _children => {
       | Lost => {js|😵|js}
       };
     let startButtonClick = _evt => send(Init(initializeState()));
-    <div className="game">
-      <div className="game__header">
-        <button
-          _type="button" className="start-button" onClick=startButtonClick>
-          (str(buttonContents))
-        </button>
+    <section className="game__wrapper">
+      <div className="game">
+        <div className="game__header">
+          <button
+            _type="button" className="start-button" onClick=startButtonClick>
+            (str(buttonContents))
+          </button>
+        </div>
+        <div className="game__board"> rows </div>
       </div>
-      <div className="game__board"> rows </div>
-    </div>;
+      <p className="instructions">
+        (str("double-click to reveal a field / click to mark a field"))
+      </p>
+    </section>;
   }
 };

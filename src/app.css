@@ -89,6 +89,11 @@
   box-shadow: none;
 }
 
+.game__board-field--exploded button {
+  background-color: #ffeae6;
+  box-shadow: 0 0 4px 1px #de421f;
+}
+
 .game__board-field--0 button {
   background: transparent;
   color: transparent;

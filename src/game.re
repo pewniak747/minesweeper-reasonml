@@ -220,8 +220,18 @@ module Field = {
         | (Safe, Revealed) => {j|$baseClassName--$mines|j}
         | _ => ""
         };
+      let explosionClassName =
+        switch data {
+        | (Mine, Revealed) => {j|$baseClassName--exploded|j}
+        | _ => ""
+        };
       let className =
-        Cn.make([baseClassName, revealedClassName, minesClassName]);
+        Cn.make([
+          baseClassName,
+          revealedClassName,
+          minesClassName,
+          explosionClassName
+        ]);
       let onClick = _evt => onClick(field);
       let onDoubleClick = _event => onDoubleClick(field);
       <Double_click onClick onDoubleClick>

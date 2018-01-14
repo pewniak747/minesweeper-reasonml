@@ -6,7 +6,8 @@ type field = (int, int);
 
 type fieldVisibility =
   | Hidden
-  | Revealed;
+  | Revealed
+  | Marked;
 
 type fieldContents =
   | Mine
@@ -40,7 +41,8 @@ type state = {
 
 type action =
   | Init(state)
-  | Reveal(field);
+  | Reveal(field)
+  | ToggleMarker(field);
 
 let rec range = (start: int, end_: int) =>
   if (start >= end_) {
@@ -164,49 +166,76 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
   };
 };
 
+let onlyWhenPlaying = (state, callback) =>
+  switch (gameStatusSelector(state)) {
+  | Playing => callback()
+  | Won
+  | Lost => ReasonReact.NoUpdate
+  };
+
 let reducer = (action, state) =>
   switch action {
   | Init(state) => ReasonReact.Update(state)
   | Reveal(field) =>
-    switch (gameStatusSelector(state)) {
-    | Playing =>
-      let data = FieldsMap.find(field, state.fields);
-      switch data {
-      | (_, Revealed) => ReasonReact.NoUpdate
-      | _ =>
-        let fieldsToReveal =
-          accumulateFieldsToReveal(state, field, FieldsSet.empty);
-        let fields =
-          FieldsMap.mapi(
-            (field, data) =>
-              if (FieldsSet.mem(field, fieldsToReveal)) {
-                switch data {
-                | (contents, _) => (contents, Revealed)
+    onlyWhenPlaying(state) @@
+    (
+      () => {
+        let data = FieldsMap.find(field, state.fields);
+        switch data {
+        | (_, Revealed) => ReasonReact.NoUpdate
+        | _ =>
+          let toReveal =
+            accumulateFieldsToReveal(state, field, FieldsSet.empty);
+          let fields =
+            FieldsMap.mapi(
+              (field, data) => {
+                let shouldReveal = FieldsSet.mem(field, toReveal);
+                switch (shouldReveal, data) {
+                | (true, (contents, _)) => (contents, Revealed)
+                | (false, data) => data
                 };
-              } else {
-                data;
               },
-            state.fields
-          );
-        ReasonReact.Update({...state, fields});
-      };
-    | Won => ReasonReact.NoUpdate
-    | Lost => ReasonReact.NoUpdate
-    }
+              state.fields
+            );
+          ReasonReact.Update({...state, fields});
+        };
+      }
+    )
+  | ToggleMarker(field) =>
+    onlyWhenPlaying(state) @@
+    (
+      () => {
+        let data = FieldsMap.find(field, state.fields);
+        let newData =
+          switch data {
+          | (contents, Hidden) => Some((contents, Marked))
+          | (contents, Marked) => Some((contents, Hidden))
+          | _ => None
+          };
+        switch newData {
+        | Some(data) =>
+          let fields = FieldsMap.add(field, data, state.fields);
+          ReasonReact.Update({...state, fields});
+        | None => ReasonReact.NoUpdate
+        };
+      }
+    )
   };
 
 module Field = {
   let component = ReasonReact.statelessComponent("Field");
-  let make = (~mines, ~data, ~field, ~onClick, _children) => {
+  let make = (~mines, ~data, ~field, ~onClick, ~onDoubleClick, _children) => {
     ...component,
     render: _self => {
       let buttonContent =
         switch data {
         | (_, Hidden) => ""
+        | (_, Marked) => {js|🚩|js}
         | (Safe, Revealed) => mines |> string_of_int
         | (Mine, Revealed) => {js|💥|js}
         };
-      let onClick = _event => onClick(field);
+      let onClick = _evt => onClick(field);
+      let onDoubleClick = _event => onDoubleClick(field);
       let (contents, visibility) = data;
       let className =
         Cn.make([
@@ -216,9 +245,11 @@ module Field = {
           ++ string_of_int(mines)
           |> Cn.ifBool(visibility == Revealed && contents == Safe)
         ]);
-      <div className>
-        <button _type="button" onClick> (str(buttonContent)) </button>
-      </div>;
+      <Double_click onClick onDoubleClick>
+        ...<div className>
+             <button _type="button"> (str(buttonContent)) </button>
+           </div>
+      </Double_click>;
     }
   };
 };
@@ -244,9 +275,17 @@ let make = _children => {
                 x => {
                   let field = (x, y);
                   let data = FieldsMap.find(field, state.fields);
-                  let onClick = field => send(Reveal(field));
+                  let onClick = field => send(ToggleMarker(field));
+                  let onDoubleClick = field => send(Reveal(field));
                   let mines = adjacentMinesSelector(state, field);
-                  <Field field data onClick mines key=(string_of_int(x)) />;
+                  <Field
+                    field
+                    data
+                    onClick
+                    onDoubleClick
+                    mines
+                    key=(string_of_int(x))
+                  />;
                 },
                 xs
               )

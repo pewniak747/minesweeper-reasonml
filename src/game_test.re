@@ -58,6 +58,8 @@ let x = (Mine, Hidden);
 
 let o = (Safe, Hidden);
 
+let fo = (Safe, Marked);
+
 let initialState =
   makeState([|
     [|o, o, o, o, o|],
@@ -83,69 +85,127 @@ let initialWonState =
   |]);
 
 describe("Game.reducer", () => {
-  test("Init replaces the state with new one", () => {
-    let expectedState = initializeState();
-    let update = reducer(Init(expectedState), initialState);
-    expect(update) |> toEqual(ReasonReact.Update(expectedState));
+  describe("Init action", () =>
+    test("replaces the state with new one", () => {
+      let expectedState = initializeState();
+      let update = reducer(Init(expectedState), initialState);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    })
+  );
+  describe("Reveal action", () => {
+    test("sets a field to Revealed state", () => {
+      let action = Reveal((3, 2));
+      let expectedState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, s, o|],
+          [|o, o, o, o, x|]
+        |]);
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    });
+    test("sets the field's neighbourhood to Revealed if it has no Mines", () => {
+      let action = Reveal((0, 3));
+      let expectedState =
+        makeState([|
+          [|s, s, o, o, o|],
+          [|s, s, x, o, o|],
+          [|s, s, s, s, o|],
+          [|s, s, s, s, x|]
+        |]);
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    });
+    test("sets a Mined field to Revealed state", () => {
+      let action = Reveal((2, 1));
+      let expectedState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, m, o, o|],
+          [|o, o, o, o, o|],
+          [|o, o, o, o, x|]
+        |]);
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    });
+    test("does nothing if field already Revealed", () => {
+      let initialState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, o, o|],
+          [|o, o, s, o, x|]
+        |]);
+      let action = Reveal((2, 3));
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.NoUpdate);
+    });
+    test("does nothing in Lost state", () => {
+      let action = Reveal((3, 0));
+      let update = reducer(action, initialLostState);
+      expect(update) |> toEqual(ReasonReact.NoUpdate);
+    });
+    test("does nothing in Won state", () => {
+      let action = Reveal((3, 1));
+      let update = reducer(action, initialLostState);
+      expect(update) |> toEqual(ReasonReact.NoUpdate);
+    });
   });
-  test("Reveal sets a field to Revealed state", () => {
-    let action = Reveal((3, 2));
-    let expectedState =
-      makeState([|
-        [|o, o, o, o, o|],
-        [|o, o, x, o, o|],
-        [|o, o, o, s, o|],
-        [|o, o, o, o, x|]
-      |]);
-    let update = reducer(action, initialState);
-    expect(update) |> toEqual(ReasonReact.Update(expectedState));
-  });
-  test(
-    "Reveal sets the field's neighbourhood to Revealed if it has no Mines", () => {
-    let action = Reveal((0, 3));
-    let expectedState =
-      makeState([|
-        [|s, s, o, o, o|],
-        [|s, s, x, o, o|],
-        [|s, s, s, s, o|],
-        [|s, s, s, s, x|]
-      |]);
-    let update = reducer(action, initialState);
-    expect(update) |> toEqual(ReasonReact.Update(expectedState));
-  });
-  test("Reveal sets a Mined field to Revealed state", () => {
-    let action = Reveal((2, 1));
-    let expectedState =
-      makeState([|
-        [|o, o, o, o, o|],
-        [|o, o, m, o, o|],
-        [|o, o, o, o, o|],
-        [|o, o, o, o, x|]
-      |]);
-    let update = reducer(action, initialState);
-    expect(update) |> toEqual(ReasonReact.Update(expectedState));
-  });
-  test("Reveal does nothing if field already Revealed", () => {
-    let initialState =
-      makeState([|
-        [|o, o, o, o, o|],
-        [|o, o, x, o, o|],
-        [|o, o, o, o, o|],
-        [|o, o, s, o, x|]
-      |]);
-    let action = Reveal((2, 3));
-    let update = reducer(action, initialState);
-    expect(update) |> toEqual(ReasonReact.NoUpdate);
-  });
-  test("Reveal does nothing in Lost state", () => {
-    let action = Reveal((3, 0));
-    let update = reducer(action, initialLostState);
-    expect(update) |> toEqual(ReasonReact.NoUpdate);
-  });
-  test("Reveal does nothing in Won state", () => {
-    let action = Reveal((3, 1));
-    let update = reducer(action, initialLostState);
-    expect(update) |> toEqual(ReasonReact.NoUpdate);
+  describe("ToggleMarker action", () => {
+    test("sets a Hidden field to Marked state", () => {
+      let action = ToggleMarker((3, 2));
+      let expectedState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, fo, o|],
+          [|o, o, o, o, x|]
+        |]);
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    });
+    test("sets a Marked field to Hidden state", () => {
+      let initialState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, fo, o|],
+          [|o, o, o, o, x|]
+        |]);
+      let action = ToggleMarker((3, 2));
+      let expectedState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, o, o|],
+          [|o, o, o, o, x|]
+        |]);
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    });
+    test("does nothing if field already Revealed", () => {
+      let initialState =
+        makeState([|
+          [|o, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, s, o|],
+          [|o, o, o, o, x|]
+        |]);
+      let action = ToggleMarker((3, 2));
+      let update = reducer(action, initialState);
+      expect(update) |> toEqual(ReasonReact.NoUpdate);
+    });
+    test("does nothing in Lost state", () => {
+      let action = ToggleMarker((3, 0));
+      let update = reducer(action, initialLostState);
+      expect(update) |> toEqual(ReasonReact.NoUpdate);
+    });
+    test("does nothing in Won state", () => {
+      let action = ToggleMarker((3, 1));
+      let update = reducer(action, initialLostState);
+      expect(update) |> toEqual(ReasonReact.NoUpdate);
+    });
   });
 });
 

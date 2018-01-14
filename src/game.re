@@ -1,7 +1,6 @@
-let str = ReasonReact.stringToElement;
+open Utils;
 
-let arr = ReasonReact.arrayToElement;
-
+/* Types */
 type field = (int, int);
 
 type fieldVisibility =
@@ -44,48 +43,7 @@ type action =
   | Reveal(field)
   | ToggleMarker(field);
 
-let rec range = (start: int, end_: int) =>
-  if (start >= end_) {
-    [];
-  } else {
-    [start, ...range(start + 1, end_)];
-  };
-
-let cartesian = (l1, l2) =>
-  List.concat(List.map(e => List.map(e' => (e, e'), l2), l1));
-
-let compareFst = ((fst1: int, _), (fst2: int, _)) =>
-  Pervasives.compare(fst1, fst2);
-
-let shuffle = d => {
-  let nd = List.map(c => (Random.bits(), c), d);
-  let sond = List.sort(compareFst, nd);
-  List.map(snd, sond);
-};
-
-let rec take = (n, lst) =>
-  switch n {
-  | 0 => []
-  | n => [List.hd(lst), ...take(n - 1, List.tl(lst))]
-  };
-
-let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
-  let xs = range(0, width);
-  let ys = range(0, height);
-  let fields = cartesian(xs, ys);
-  if (List.length(fields) <= mines) {
-    failwith("Too many mines for the board");
-  };
-  let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.of_list;
-  let reduceFields = (acc, field) => {
-    let contents = FieldsSet.mem(field, minedFields) ? Mine : Safe;
-    let data = (contents, Hidden);
-    FieldsMap.add(field, data, acc);
-  };
-  let fieldsWithData = List.fold_left(reduceFields, FieldsMap.empty, fields);
-  {width, height, fields: fieldsWithData};
-};
-
+/* Selectors - computing values based on game state */
 let neighbourDiff =
   cartesian([(-1), 0, 1], [(-1), 0, 1])
   |> List.filter(e => ! (fst(e) == 0 && snd(e) == 0));
@@ -143,7 +101,23 @@ let gameStatusSelector = state => {
   };
 };
 
-let component = ReasonReact.reducerComponent("Game");
+/* Game actions logic */
+let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
+  let xs = range(0, width);
+  let ys = range(0, height);
+  let fields = cartesian(xs, ys);
+  if (List.length(fields) <= mines) {
+    failwith("Too many mines for the board");
+  };
+  let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.of_list;
+  let reduceFields = (acc, field) => {
+    let contents = FieldsSet.mem(field, minedFields) ? Mine : Safe;
+    let data = (contents, Hidden);
+    FieldsMap.add(field, data, acc);
+  };
+  let fieldsWithData = List.fold_left(reduceFields, FieldsMap.empty, fields);
+  {width, height, fields: fieldsWithData};
+};
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
   let mines = adjacentMinesSelector(state, field);
@@ -222,6 +196,7 @@ let reducer = (action, state) =>
     )
   };
 
+/* Game UI */
 module Field = {
   let component = ReasonReact.statelessComponent("Field");
   let make = (~mines, ~data, ~field, ~onClick, ~onDoubleClick, _children) => {
@@ -253,6 +228,8 @@ module Field = {
     }
   };
 };
+
+let component = ReasonReact.reducerComponent("Game");
 
 let make = _children => {
   ...component,

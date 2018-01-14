@@ -4,6 +4,8 @@ open Expect;
 
 open Game;
 
+open Utils;
+
 describe("Game.initializeState", (_) => {
   let state = initializeState(~width=3, ~height=4, ~mines=5, ());
   test("constructs a new Playing game state", (_) => {

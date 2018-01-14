@@ -209,17 +209,21 @@ module Field = {
         | (Safe, Revealed) => mines |> string_of_int
         | (Mine, Revealed) => {js|💥|js}
         };
+      let baseClassName = "game__board-field";
+      let revealedClassName =
+        switch data {
+        | (_, Revealed) => {j|$baseClassName--revealed|j}
+        | _ => ""
+        };
+      let minesClassName =
+        switch data {
+        | (Safe, Revealed) => {j|$baseClassName--$mines|j}
+        | _ => ""
+        };
+      let className =
+        Cn.make([baseClassName, revealedClassName, minesClassName]);
       let onClick = _evt => onClick(field);
       let onDoubleClick = _event => onDoubleClick(field);
-      let (contents, visibility) = data;
-      let className =
-        Cn.make([
-          "game__board-field",
-          "game__board-field--revealed" |> Cn.ifBool(visibility == Revealed),
-          "game__board-field--"
-          ++ string_of_int(mines)
-          |> Cn.ifBool(visibility == Revealed && contents == Safe)
-        ]);
       <Double_click onClick onDoubleClick>
         ...<div className>
              <button _type="button"> (str(buttonContent)) </button>

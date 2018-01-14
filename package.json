@@ -2,7 +2,9 @@
   "name": "minesweeper-reasonml",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://pewniak747.github.io/minesweeper-reasonml",
   "dependencies": {
+    "gh-pages": "^1.1.0",
     "re-classnames": "^0.0.3",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
@@ -13,7 +15,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "prepare": "npm link bs-platform"
+    "prepare": "npm link bs-platform",
+    "predeploy": "yarn build",
+    "deploy": "gh-pages -d build"
   },
   "devDependencies": {
     "bs-jest": "^0.3.2",

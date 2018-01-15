@@ -140,60 +140,46 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
   };
 };
 
-let onlyWhenPlaying = (state, callback) =>
-  switch (gameStatusSelector(state)) {
-  | Playing => callback()
-  | Won
-  | Lost => ReasonReact.NoUpdate
-  };
+let isPlaying = state => gameStatusSelector(state) == Playing;
 
 let reducer = (action, state) =>
   switch action {
   | Init(state) => ReasonReact.Update(state)
-  | Reveal(field) =>
-    onlyWhenPlaying(state) @@
-    (
-      () => {
-        let data = FieldsMap.find(field, state.fields);
-        switch data {
-        | (_, Revealed) => ReasonReact.NoUpdate
-        | _ =>
-          let toReveal =
-            accumulateFieldsToReveal(state, field, FieldsSet.empty);
-          let fields =
-            FieldsMap.mapi(
-              (field, data) => {
-                let shouldReveal = FieldsSet.mem(field, toReveal);
-                switch (shouldReveal, data) {
-                | (true, (contents, _)) => (contents, Revealed)
-                | (false, data) => data
-                };
-              },
-              state.fields
-            );
-          ReasonReact.Update({...state, fields});
-        };
-      }
-    )
-  | ToggleMarker(field) =>
-    onlyWhenPlaying(state) @@
-    (
-      () => {
-        let data = FieldsMap.find(field, state.fields);
-        let newData =
-          switch data {
-          | (contents, Hidden) => Some((contents, Marked))
-          | (contents, Marked) => Some((contents, Hidden))
-          | _ => None
-          };
-        switch newData {
-        | Some(data) =>
-          let fields = FieldsMap.add(field, data, state.fields);
-          ReasonReact.Update({...state, fields});
-        | None => ReasonReact.NoUpdate
-        };
-      }
-    )
+  | Reveal(field) when isPlaying(state) =>
+    let data = FieldsMap.find(field, state.fields);
+    switch data {
+    | (_, Revealed) => ReasonReact.NoUpdate
+    | _ =>
+      let toReveal = accumulateFieldsToReveal(state, field, FieldsSet.empty);
+      let fields =
+        FieldsMap.mapi(
+          (field, data) => {
+            let shouldReveal = FieldsSet.mem(field, toReveal);
+            switch (shouldReveal, data) {
+            | (true, (contents, _)) => (contents, Revealed)
+            | (false, data) => data
+            };
+          },
+          state.fields
+        );
+      ReasonReact.Update({...state, fields});
+    };
+  | ToggleMarker(field) when isPlaying(state) =>
+    let data = FieldsMap.find(field, state.fields);
+    let newData =
+      switch data {
+      | (contents, Hidden) => Some((contents, Marked))
+      | (contents, Marked) => Some((contents, Hidden))
+      | _ => None
+      };
+    switch newData {
+    | Some(data) =>
+      let fields = FieldsMap.add(field, data, state.fields);
+      ReasonReact.Update({...state, fields});
+    | None => ReasonReact.NoUpdate
+    };
+  | Reveal(_field) => ReasonReact.NoUpdate
+  | ToggleMarker(_field) => ReasonReact.NoUpdate
   };
 
 /* Game UI */

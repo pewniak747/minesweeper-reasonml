@@ -101,6 +101,8 @@ let gameStatusSelector = state => {
   };
 };
 
+let add2 = (map, (key, value)) => FieldsMap.add(key, value, map);
+
 /* Game actions logic */
 let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
   let xs = range(0, width);
@@ -110,12 +112,15 @@ let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
     failwith("Too many mines for the board");
   };
   let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.of_list;
-  let reduceFields = (acc, field) => {
+  let makeFieldWithData = field => {
     let contents = FieldsSet.mem(field, minedFields) ? Mine : Safe;
     let data = (contents, Hidden);
-    FieldsMap.add(field, data, acc);
+    (field, data);
   };
-  let fieldsWithData = List.fold_left(reduceFields, FieldsMap.empty, fields);
+  let fieldsWithData =
+    fields
+    |> List.map(makeFieldWithData)
+    |> List.fold_left(add2, FieldsMap.empty);
   {width, height, fields: fieldsWithData};
 };
 
@@ -125,17 +130,13 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
   let accWithField = FieldsSet.add(field, acc);
   switch (mines, contents) {
   | (0, Safe) =>
-    let neighbours = fieldNeighboursSelector(state, field);
-    List.fold_left(
-      (acc, neighbour) =>
-        if (FieldsSet.mem(neighbour, acc)) {
-          acc;
-        } else {
-          accumulateFieldsToReveal(state, neighbour, acc);
-        },
-      accWithField,
-      neighbours
-    );
+    let visitNeighbour = (acc, neighbour) =>
+      switch (FieldsSet.mem(neighbour, acc)) {
+      | true => acc
+      | false => accumulateFieldsToReveal(state, neighbour, acc)
+      };
+    fieldNeighboursSelector(state, field)
+    |> List.fold_left(visitNeighbour, accWithField);
   | _ => accWithField
   };
 };

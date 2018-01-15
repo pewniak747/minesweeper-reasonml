@@ -249,9 +249,9 @@ module Field = {
 
 let component = ReasonReact.reducerComponent("Game");
 
-let make = _children => {
+let make = (~width: int, ~height: int, ~mines: int, _children) => {
   ...component,
-  initialState: initializeState,
+  initialState: initializeState(~width, ~height, ~mines),
   reducer,
   render: ({state, send}) => {
     let xs = range(0, state.width);
@@ -270,10 +270,11 @@ let make = _children => {
                 x => {
                   let field = (x, y);
                   let data = FieldsMap.find(field, state.fields);
-                  let displayedData = switch ((gameStatus, data)) {
-                  | (Won, (Mine, _)) => (Mine, Marked)
-                  | (_, data) => data
-                  };
+                  let displayedData =
+                    switch (gameStatus, data) {
+                    | (Won, (Mine, _)) => (Mine, Marked)
+                    | (_, data) => data
+                    };
                   let onClick = field => send(ToggleMarker(field));
                   let onDoubleClick = field => send(Reveal(field));
                   let mines = adjacentMinesSelector(state, field);
@@ -298,7 +299,12 @@ let make = _children => {
       | Won => {js|😎|js}
       | Lost => {js|😵|js}
       };
-    let startButtonClick = _evt => send(Init(initializeState()));
+    let startButtonClick = _evt =>
+      send(
+        Init(
+          initializeState(~width=state.width, ~height=state.height, ~mines, ())
+        )
+      );
     <section className="game__wrapper">
       <div className="game">
         <div className="game__header">

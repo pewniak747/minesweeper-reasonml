@@ -24,6 +24,28 @@
   to { transform: rotate(360deg); }
 }
 
+.difficulties__wrapper {
+  margin: auto;
+}
+
+.difficulties {
+  display: flex;
+  justify-content: center;
+}
+
+.difficulty {
+  line-height: 24px;
+  font-size: 24px;
+  padding: 3px;
+  margin: 0 6px;
+  height: 30px;
+  cursor: pointer;
+  border: 1px solid #eee;
+  box-shadow: 0.5px 1px 0 #ddd;
+  background: #fff;
+  border-radius: 5px;
+}
+
 .game__wrapper {
   margin: auto;
 }

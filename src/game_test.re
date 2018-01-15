@@ -134,7 +134,7 @@ describe("Game.reducer", () => {
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
     });
     test(
-      "reveals the unmarked neighbouring fields if field already Revealed", () => {
+      "reveals the un-Marked neighbouring fields if field already Revealed", () => {
       let initialState =
         makeState([|
           [|o, o, o, o, o|],
@@ -155,7 +155,7 @@ describe("Game.reducer", () => {
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
     });
     test(
-      "does nothing if already Revealed field does not have matching number of marked neighbours",
+      "does nothing if already Revealed field does not have matching number of Marked neighbours",
       () => {
         let initialState =
           makeState([|

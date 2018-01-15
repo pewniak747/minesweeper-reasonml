@@ -1,7 +1,6 @@
 TODO:
 * extract components
 * mousedown-look of buttons
-* handle double-clicking already revealed fields
 * mobile ready
 * difficulty levels
 
@@ -11,3 +10,5 @@ DONE:
 * tests
 * marking the fields
 * reveal fields by double clicking
+* handle double-clicking already revealed fields
+* end-game look

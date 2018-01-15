@@ -270,12 +270,16 @@ let make = _children => {
                 x => {
                   let field = (x, y);
                   let data = FieldsMap.find(field, state.fields);
+                  let displayedData = switch ((gameStatus, data)) {
+                  | (Won, (Mine, _)) => (Mine, Marked)
+                  | (_, data) => data
+                  };
                   let onClick = field => send(ToggleMarker(field));
                   let onDoubleClick = field => send(Reveal(field));
                   let mines = adjacentMinesSelector(state, field);
                   <Field
                     field
-                    data
+                    data=displayedData
                     onClick
                     onDoubleClick
                     mines

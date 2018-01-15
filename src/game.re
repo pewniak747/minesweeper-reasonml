@@ -140,6 +140,21 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
   };
 };
 
+let fieldsToReveal = (state, field) =>
+  accumulateFieldsToReveal(state, field, FieldsSet.empty);
+
+let revealFields = (state, toReveal) =>
+  FieldsMap.mapi(
+    (field, data) => {
+      let shouldReveal = FieldsSet.mem(field, toReveal);
+      switch data {
+      | (contents, _) when shouldReveal => (contents, Revealed)
+      | data => data
+      };
+    },
+    state.fields
+  );
+
 let isPlaying = state => gameStatusSelector(state) == Playing;
 
 let reducer = (action, state) =>
@@ -148,20 +163,30 @@ let reducer = (action, state) =>
   | Reveal(field) when isPlaying(state) =>
     let data = FieldsMap.find(field, state.fields);
     switch data {
-    | (_, Revealed) => ReasonReact.NoUpdate
-    | _ =>
-      let toReveal = accumulateFieldsToReveal(state, field, FieldsSet.empty);
-      let fields =
-        FieldsMap.mapi(
-          (field, data) => {
-            let shouldReveal = FieldsSet.mem(field, toReveal);
-            switch data {
-            | (contents, _) when shouldReveal => (contents, Revealed)
-            | data => data
-            };
-          },
-          state.fields
+    | (_, Revealed) =>
+      let neighbours = fieldNeighboursSelector(state, field);
+      let (markedNeighbours, nonMarkedNeighbours) =
+        List.partition(
+          neighbour =>
+            switch (FieldsMap.find(neighbour, state.fields)) {
+            | (_, Marked) => true
+            | _ => false
+            },
+          neighbours
         );
+      let mines = adjacentMinesSelector(state, field);
+      switch (List.length(markedNeighbours)) {
+      | x when x == mines =>
+        let toReveal =
+          List.map(fieldsToReveal(state), nonMarkedNeighbours)
+          |> List.fold_left(FieldsSet.union, FieldsSet.empty);
+        let fields = revealFields(state, toReveal);
+        ReasonReact.Update({...state, fields});
+      | _ => ReasonReact.NoUpdate
+      };
+    | _ =>
+      let toReveal = fieldsToReveal(state, field);
+      let fields = revealFields(state, toReveal);
       ReasonReact.Update({...state, fields});
     };
   | ToggleMarker(field) when isPlaying(state) =>

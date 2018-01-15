@@ -60,6 +60,8 @@ let x = (Mine, Hidden);
 
 let o = (Safe, Hidden);
 
+let fx = (Mine, Marked);
+
 let fo = (Safe, Marked);
 
 let initialState =
@@ -131,18 +133,42 @@ describe("Game.reducer", () => {
       let update = reducer(action, initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
     });
-    test("does nothing if field already Revealed", () => {
+    test(
+      "reveals the unmarked neighbouring fields if field already Revealed", () => {
       let initialState =
         makeState([|
           [|o, o, o, o, o|],
-          [|o, o, x, o, o|],
-          [|o, o, o, o, o|],
-          [|o, o, s, o, x|]
+          [|o, o, fx, o, o|],
+          [|o, o, o, s, o|],
+          [|x, o, o, o, fx|]
         |]);
-      let action = Reveal((2, 3));
+      let action = Reveal((3, 2));
       let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.NoUpdate);
+      /* TODO: flood the upper left corner? */
+      let expectedState =
+        makeState([|
+          [|o, o, o, s, s|],
+          [|o, o, fx, s, s|],
+          [|o, s, s, s, s|],
+          [|x, s, s, s, fx|]
+        |]);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
     });
+    test(
+      "does nothing if already Revealed field does not have matching number of marked neighbours",
+      () => {
+        let initialState =
+          makeState([|
+            [|o, o, o, o, o|],
+            [|o, o, fx, o, o|],
+            [|o, o, o, s, o|],
+            [|x, o, o, o, x|]
+          |]);
+        let action = Reveal((3, 2));
+        let update = reducer(action, initialState);
+        expect(update) |> toEqual(ReasonReact.NoUpdate);
+      }
+    );
     test("does nothing in Lost state", () => {
       let action = Reveal((3, 0));
       let update = reducer(action, initialLostState);

@@ -155,9 +155,9 @@ let reducer = (action, state) =>
         FieldsMap.mapi(
           (field, data) => {
             let shouldReveal = FieldsSet.mem(field, toReveal);
-            switch (shouldReveal, data) {
-            | (true, (contents, _)) => (contents, Revealed)
-            | (false, data) => data
+            switch data {
+            | (contents, _) when shouldReveal => (contents, Revealed)
+            | data => data
             };
           },
           state.fields

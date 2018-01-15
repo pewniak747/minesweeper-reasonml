@@ -46,7 +46,7 @@ type action =
 /* Selectors - computing values based on game state */
 let neighbourDiff =
   cartesian([(-1), 0, 1], [(-1), 0, 1])
-  |> List.filter(e => ! (fst(e) == 0 && snd(e) == 0));
+  |> List.filter(((x, y)) => x != 0 || y != 0);
 
 if (List.length(neighbourDiff) != 8) {
   failwith("nighbourDiff should contain exactly 8 items");
@@ -55,22 +55,16 @@ if (List.length(neighbourDiff) != 8) {
 let fieldNeighboursSelector = (state, field) => {
   let {width, height} = state;
   let (x, y) = field;
-  let neighbourCandidates =
-    List.map(((dx, dy)) => (x + dx, y + dy), neighbourDiff);
-  List.filter(
-    ((x, y)) => x >= 0 && x < width && y >= 0 && y < height,
-    neighbourCandidates
-  );
+  neighbourDiff
+  |> List.map(((dx, dy)) => (x + dx, y + dy))
+  |> List.filter(((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
-let adjacentMinesSelector = (state, field) => {
-  let {fields} = state;
-  let neighbours = fieldNeighboursSelector(state, field);
-  let neighbourData = List.map(f => FieldsMap.find(f, fields), neighbours);
-  let minedNeighbours =
-    List.filter(((contents, _)) => contents == Mine, neighbourData);
-  List.length(minedNeighbours);
-};
+let adjacentMinesSelector = (state, field) =>
+  fieldNeighboursSelector(state, field)
+  |> List.map(field => FieldsMap.find(field, state.fields))
+  |> List.filter(((contents, _)) => contents == Mine)
+  |> List.length;
 
 let gameStatusSelector = state => {
   let fields = state.fields;
@@ -83,7 +77,7 @@ let gameStatusSelector = state => {
         },
       fields
     );
-  let playing =
+  let safeRemaining =
     FieldsMap.exists(
       (_, data) =>
         switch data {
@@ -94,7 +88,7 @@ let gameStatusSelector = state => {
     );
   if (exploded) {
     Lost;
-  } else if (playing) {
+  } else if (safeRemaining) {
     Playing;
   } else {
     Won;
@@ -131,10 +125,8 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
   switch (mines, contents) {
   | (0, Safe) =>
     let visitNeighbour = (acc, neighbour) =>
-      switch (FieldsSet.mem(neighbour, acc)) {
-      | true => acc
-      | false => accumulateFieldsToReveal(state, neighbour, acc)
-      };
+      FieldsSet.mem(neighbour, acc) ?
+        acc : accumulateFieldsToReveal(state, neighbour, acc);
     fieldNeighboursSelector(state, field)
     |> List.fold_left(visitNeighbour, accWithField);
   | _ => accWithField

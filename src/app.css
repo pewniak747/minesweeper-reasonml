@@ -72,9 +72,25 @@
   padding: 10px;
   display: flex;
   justify-content: center;
+  position: relative;
 }
 
-.start-button {
+.game__remaining-mines {
+  position: absolute;
+  left: 5px;
+  height: 30px;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  color: #333;
+}
+
+.game__start-button {
   font-size: 24px;
   line-height: 24px;
   padding: 3px;

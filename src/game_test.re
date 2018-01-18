@@ -274,3 +274,16 @@ describe("Game.adjacentMinesSelector", () => {
     expect(mines) |> toBe(2);
   });
 });
+
+describe("Game.remainingMinesSelector", () =>
+  test("returns the number of mines minus the number of marked fields", () => {
+    let state =
+      makeState([|
+        [|o, o, o, o, o|],
+        [|o, o, fx, o, o|],
+        [|o, o, o, s, o|],
+        [|x, o, o, o, fx|]
+      |]);
+    expect(remainingMinesSelector(state)) |> toBe(1);
+  })
+);

@@ -95,6 +95,18 @@ let gameStatusSelector = state => {
   };
 };
 
+let remainingMinesSelector = state => {
+  let mines =
+    state.fields
+    |> FieldsMap.filter((_, (contents, _)) => contents == Mine)
+    |> FieldsMap.cardinal;
+  let marked =
+    state.fields
+    |> FieldsMap.filter((_, (_, visibility)) => visibility == Marked)
+    |> FieldsMap.cardinal;
+  mines - marked;
+};
+
 let add2 = (map, (key, value)) => FieldsMap.add(key, value, map);
 
 /* Game actions logic */
@@ -311,11 +323,17 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
           initializeState(~width=state.width, ~height=state.height, ~mines, ())
         )
       );
+    let remainingMines = remainingMinesSelector(state);
     <section className="game__wrapper">
       <div className="game">
         <div className="game__header">
+          <div className="game__remaining-mines">
+            (str(remainingMines |> string_of_int))
+          </div>
           <button
-            _type="button" className="start-button" onClick=startButtonClick>
+            _type="button"
+            className="game__start-button"
+            onClick=startButtonClick>
             (str(buttonContents))
           </button>
         </div>

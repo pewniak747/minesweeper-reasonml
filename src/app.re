@@ -73,7 +73,9 @@ let make = (~message, _children) => {
             (str({js|Tomasz Pewiński|js}))
           </a>
           (str({js| · |js}))
-          <a href="https://github.com/pewniak747/minesweeper-reasonml" target="_blank">
+          <a
+            href="https://github.com/pewniak747/minesweeper-reasonml"
+            target="_blank">
             (str("source"))
           </a>
         </p>

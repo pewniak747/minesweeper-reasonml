@@ -63,12 +63,22 @@ let make = (~message, _children) => {
           };
         <Game width height mines />;
       };
-    <div className="App">
-      <div className="App-header">
-        <a href=""> <img src=logo className="App-logo" alt="logo" /> </a>
+    <div className="app">
+      <div className="app__header">
+        <a href=""> <img src=logo className="app__logo" alt="logo" /> </a>
         <h2> (str(message)) </h2>
+        <p className="app__credits">
+          (str("by "))
+          <a href="http://pewniak747.info" target="_blank">
+            (str({js|Tomasz Pewiński|js}))
+          </a>
+          (str({js| · |js}))
+          <a href="https://github.com/pewniak747/minesweeper-reasonml" target="_blank">
+            (str("source"))
+          </a>
+        </p>
       </div>
-      <div className="App-intro"> contents </div>
+      <div className="app__intro"> contents </div>
     </div>;
   }
 };

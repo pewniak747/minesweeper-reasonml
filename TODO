@@ -2,7 +2,6 @@ TODO:
 * extract components
 * mousedown-look of buttons
 * mine counter
-* credits
 
 DONE:
 * colors for different mine amounts
@@ -14,3 +13,4 @@ DONE:
 * end-game look
 * difficulty levels
 * mobile ready
+* credits

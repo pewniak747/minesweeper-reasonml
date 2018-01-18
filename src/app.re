@@ -65,7 +65,7 @@ let make = (~message, _children) => {
       };
     <div className="App">
       <div className="App-header">
-        <a href="/"> <img src=logo className="App-logo" alt="logo" /> </a>
+        <a href=""> <img src=logo className="App-logo" alt="logo" /> </a>
         <h2> (str(message)) </h2>
       </div>
       <div className="App-intro"> contents </div>

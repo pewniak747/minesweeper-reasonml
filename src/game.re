@@ -202,9 +202,15 @@ let reducer = (action, state) =>
 
 /* Game UI */
 module Field = {
-  let component = ReasonReact.statelessComponent("Field");
+  type retainedProps = {data: fieldData};
+  let component = ReasonReact.statelessComponentWithRetainedProps("Field");
   let make = (~mines, ~data, ~field, ~onClick, ~onDoubleClick, _children) => {
     ...component,
+    retainedProps: {
+      data: data
+    },
+    shouldUpdate: ({oldSelf, newSelf}) =>
+      oldSelf.retainedProps.data !== newSelf.retainedProps.data,
     render: _self => {
       let buttonContent =
         switch data {

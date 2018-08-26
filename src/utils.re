@@ -1,7 +1,7 @@
 /* Utilities */
-let str = ReasonReact.stringToElement;
+let str = ReasonReact.string;
 
-let arr = ReasonReact.arrayToElement;
+let arr = ReasonReact.array;
 
 let rec range = (start: int, end_: int) =>
   if (start >= end_) {

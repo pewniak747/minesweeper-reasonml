@@ -32,21 +32,21 @@ let make = (~message, _children) => {
           <h3> (str("Choose difficulty")) </h3>
           <div className="difficulties">
             <button
-              _type="button"
+              type_="button"
               className="difficulty"
               onClick=(choose(Easy))
               title="Easy">
               (str({j|😌|j}))
             </button>
             <button
-              _type="button"
+              type_="button"
               className="difficulty"
               onClick=(choose(Normal))
               title="Normal">
               (str({j|😐|j}))
             </button>
             <button
-              _type="button"
+              type_="button"
               className="difficulty"
               onClick=(choose(Hard))
               title="Hard">

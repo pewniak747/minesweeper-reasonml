@@ -6,13 +6,18 @@
   "bs-dependencies": [
     "reason-react",
     "re-classnames",
-    "bs-jest"
+    "@glennsl/bs-jest"
   ],
   "reason": {
     "react-jsx": 2
   },
+  "refmt": 3,
   "bsc-flags": [
     "-bs-super-errors"
   ],
-  "refmt": 3
+  "package-specs": {
+    "module": "commonjs",
+    "in-source": true
+  },
+  "suffix": ".bs.js"
 }

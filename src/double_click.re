@@ -16,7 +16,7 @@ let make = (~onClick as onSingleClick, ~onDoubleClick, children) => {
   reducer: (_action: action, _state: state) => ReasonReact.NoUpdate,
   render: ({state}) => {
     let onClick = evt => {
-      ReactEventRe.Synthetic.preventDefault(evt);
+      ReactEvent.Synthetic.preventDefault(evt);
       let now = Js.Date.now();
       let lastClickAt = state.lastClickAt.contents;
       let isDoubleClick = lastClickAt +. thresholdMs > now;

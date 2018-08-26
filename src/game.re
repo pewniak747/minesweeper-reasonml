@@ -258,7 +258,7 @@ module Field = {
       let onDoubleClick = _event => onDoubleClick(field);
       <Double_click onClick onDoubleClick>
         ...<div className>
-             <button _type="button"> (str(buttonContent)) </button>
+             <button type_="button"> (str(buttonContent)) </button>
            </div>
       </Double_click>;
     }
@@ -331,7 +331,7 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
             (str(remainingMines |> string_of_int))
           </div>
           <button
-            _type="button"
+            type_="button"
             className="game__start-button"
             onClick=startButtonClick>
             (str(buttonContents))

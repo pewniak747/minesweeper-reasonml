@@ -6,9 +6,9 @@ open Game;
 
 open Utils;
 
-describe("Game.initializeState", (_) => {
+describe("Game.initializeState", _ => {
   let state = initializeState(~width=3, ~height=4, ~mines=5, ());
-  test("constructs a new Playing game state", (_) => {
+  test("constructs a new Playing game state", _ => {
     let status = gameStatusSelector(state);
     expect(status) |> toBe(Playing);
   });
@@ -33,21 +33,22 @@ describe("Game.initializeState", (_) => {
   });
 });
 
-let makeState = matrix : state => {
+let makeState = matrix: state => {
   let height = Array.length(matrix);
   let width = Array.length(matrix[0]);
-  let fields: list((int, int)) = cartesian(range(0, width), range(0, height));
+  let fields: list((int, int)) =
+    cartesian(range(0, width), range(0, height));
   let fieldsWithData =
     List.fold_left(
       (acc, field) => {
         let data =
-          switch field {
+          switch (field) {
           | (x, y) => matrix[y][x]
           };
         FieldsMap.add(field, data, acc);
       },
       FieldsMap.empty,
-      fields
+      fields,
     );
   {width, height, fields: fieldsWithData};
 };
@@ -69,7 +70,7 @@ let initialState =
     [|o, o, o, o, o|],
     [|o, o, x, o, o|],
     [|o, o, o, o, o|],
-    [|o, o, o, o, x|]
+    [|o, o, o, o, x|],
   |]);
 
 let initialLostState =
@@ -77,7 +78,7 @@ let initialLostState =
     [|s, o, o, o, o|],
     [|o, o, x, s, o|],
     [|o, o, s, s, o|],
-    [|o, o, o, o, m|]
+    [|o, o, o, o, m|],
   |]);
 
 let initialWonState =
@@ -85,7 +86,7 @@ let initialWonState =
     [|s, s, s, s, s|],
     [|s, s, x, s, s|],
     [|s, s, s, s, s|],
-    [|s, s, s, s, x|]
+    [|s, s, s, s, x|],
   |]);
 
 describe("Game.reducer", () => {
@@ -104,7 +105,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, x, o, o|],
           [|o, o, o, s, o|],
-          [|o, o, o, o, x|]
+          [|o, o, o, o, x|],
         |]);
       let update = reducer(action, initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
@@ -116,7 +117,7 @@ describe("Game.reducer", () => {
           [|s, s, o, o, o|],
           [|s, s, x, o, o|],
           [|s, s, s, s, o|],
-          [|s, s, s, s, x|]
+          [|s, s, s, s, x|],
         |]);
       let update = reducer(action, initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
@@ -128,7 +129,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, m, o, o|],
           [|o, o, o, o, o|],
-          [|o, o, o, o, x|]
+          [|o, o, o, o, x|],
         |]);
       let update = reducer(action, initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
@@ -140,7 +141,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, fx, o, o|],
           [|o, o, o, s, o|],
-          [|x, o, o, o, fx|]
+          [|x, o, o, o, fx|],
         |]);
       let action = Reveal((3, 2));
       let update = reducer(action, initialState);
@@ -150,7 +151,7 @@ describe("Game.reducer", () => {
           [|o, o, o, s, s|],
           [|o, o, fx, s, s|],
           [|o, s, s, s, s|],
-          [|x, s, s, s, fx|]
+          [|x, s, s, s, fx|],
         |]);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
     });
@@ -162,12 +163,12 @@ describe("Game.reducer", () => {
             [|o, o, o, o, o|],
             [|o, o, fx, o, o|],
             [|o, o, o, s, o|],
-            [|x, o, o, o, x|]
+            [|x, o, o, o, x|],
           |]);
         let action = Reveal((3, 2));
         let update = reducer(action, initialState);
         expect(update) |> toEqual(ReasonReact.NoUpdate);
-      }
+      },
     );
     test("does nothing in Lost state", () => {
       let action = Reveal((3, 0));
@@ -188,7 +189,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, x, o, o|],
           [|o, o, o, fo, o|],
-          [|o, o, o, o, x|]
+          [|o, o, o, o, x|],
         |]);
       let update = reducer(action, initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
@@ -199,7 +200,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, x, o, o|],
           [|o, o, o, fo, o|],
-          [|o, o, o, o, x|]
+          [|o, o, o, o, x|],
         |]);
       let action = ToggleMarker((3, 2));
       let expectedState =
@@ -207,7 +208,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, x, o, o|],
           [|o, o, o, o, o|],
-          [|o, o, o, o, x|]
+          [|o, o, o, o, x|],
         |]);
       let update = reducer(action, initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
@@ -218,7 +219,7 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, x, o, o|],
           [|o, o, o, s, o|],
-          [|o, o, o, o, x|]
+          [|o, o, o, o, x|],
         |]);
       let action = ToggleMarker((3, 2));
       let update = reducer(action, initialState);
@@ -282,7 +283,7 @@ describe("Game.remainingMinesSelector", () =>
         [|o, o, o, o, o|],
         [|o, o, fx, o, o|],
         [|o, o, o, s, o|],
-        [|x, o, o, o, fx|]
+        [|x, o, o, o, fx|],
       |]);
     expect(remainingMinesSelector(state)) |> toBe(1);
   })

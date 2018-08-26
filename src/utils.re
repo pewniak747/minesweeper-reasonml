@@ -23,7 +23,7 @@ let shuffle = d => {
 };
 
 let rec take = (n, lst) =>
-  switch n {
+  switch (n) {
   | 0 => []
   | n => [List.hd(lst), ...take(n - 1, List.tl(lst))]
   };

@@ -1,6 +1,6 @@
 [%bs.raw {|require('./app.css')|}];
 
-[@bs.module] external logo : string = "./logo.svg";
+[@bs.module] external logo: string = "./logo.svg";
 
 open Utils;
 
@@ -20,43 +20,44 @@ let make = (~message, _children) => {
   ...component,
   initialState: () => None,
   reducer: (action, _state) =>
-    switch action {
+    switch (action) {
     | ChooseDifficulty(difficulty) => ReasonReact.Update(Some(difficulty))
     },
   render: ({state, send}) => {
     let contents =
-      switch state {
+      switch (state) {
       | None =>
-        let choose = (difficulty, _evt) => send(ChooseDifficulty(difficulty));
+        let choose = (difficulty, _evt) =>
+          send(ChooseDifficulty(difficulty));
         <div className="difficulties__wrapper">
-          <h3> (str("Choose difficulty")) </h3>
+          <h3> {str("Choose difficulty")} </h3>
           <div className="difficulties">
             <button
               type_="button"
               className="difficulty"
-              onClick=(choose(Easy))
+              onClick={choose(Easy)}
               title="Easy">
-              (str({j|😌|j}))
+              {str({j|😌|j})}
             </button>
             <button
               type_="button"
               className="difficulty"
-              onClick=(choose(Normal))
+              onClick={choose(Normal)}
               title="Normal">
-              (str({j|😐|j}))
+              {str({j|😐|j})}
             </button>
             <button
               type_="button"
               className="difficulty"
-              onClick=(choose(Hard))
+              onClick={choose(Hard)}
               title="Hard">
-              (str({j|😱|j}))
+              {str({j|😱|j})}
             </button>
           </div>
         </div>;
       | Some(difficulty) =>
         let (width, height, mines) =
-          switch difficulty {
+          switch (difficulty) {
           | Easy => (9, 9, 10)
           | Normal => (16, 16, 40)
           | Hard => (30, 16, 99)
@@ -66,21 +67,21 @@ let make = (~message, _children) => {
     <div className="app">
       <div className="app__header">
         <a href=""> <img src=logo className="app__logo" alt="logo" /> </a>
-        <h2> (str(message)) </h2>
+        <h2> {str(message)} </h2>
         <p className="app__credits">
-          (str("by "))
+          {str("by ")}
           <a href="http://pewniak747.info" target="_blank">
-            (str({js|Tomasz Pewiński|js}))
+            {str({js|Tomasz Pewiński|js})}
           </a>
-          (str({js| · |js}))
+          {str({js| · |js})}
           <a
             href="https://github.com/pewniak747/minesweeper-reasonml"
             target="_blank">
-            (str("source"))
+            {str("source")}
           </a>
         </p>
       </div>
       <div className="app__intro"> contents </div>
     </div>;
-  }
+  },
 };

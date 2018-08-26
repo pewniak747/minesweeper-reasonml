@@ -1,6 +1,6 @@
 type state = {
   lastClickAt: ref(float),
-  timeoutId: ref(option(Js.Global.timeoutId))
+  timeoutId: ref(option(Js.Global.timeoutId)),
 };
 
 type action =
@@ -21,7 +21,7 @@ let make = (~onClick as onSingleClick, ~onDoubleClick, children) => {
       let lastClickAt = state.lastClickAt.contents;
       let isDoubleClick = lastClickAt +. thresholdMs > now;
       state.lastClickAt := now;
-      switch state.timeoutId.contents {
+      switch (state.timeoutId.contents) {
       | Some(id) => Js.Global.clearTimeout(id)
       | None => ()
       };
@@ -31,11 +31,11 @@ let make = (~onClick as onSingleClick, ~onDoubleClick, children) => {
         let timeoutId =
           Js.Global.setTimeout(
             () => onSingleClick(evt),
-            thresholdMs |> int_of_float
+            thresholdMs |> int_of_float,
           );
         state.timeoutId := Some(timeoutId);
       };
     };
     <div onClick> children </div>;
-  }
+  },
 };

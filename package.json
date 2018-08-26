@@ -16,6 +16,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "refmt": "find src -name '*.re*' | xargs node_modules/bs-platform/lib/refmt.exe --in-place",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
   },

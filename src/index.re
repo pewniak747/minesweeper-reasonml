@@ -2,5 +2,5 @@
 
 ReactDOMRe.renderToElementWithId(
   <App message="Minesweeper in ReasonML & React" />,
-  "root"
+  "root",
 );

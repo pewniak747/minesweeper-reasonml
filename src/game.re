@@ -35,7 +35,7 @@ module FieldsSet = Set.Make(OrderedFields);
 type state = {
   width: int,
   height: int,
-  fields: FieldsMap.t(fieldData)
+  fields: FieldsMap.t(fieldData),
 };
 
 type action =
@@ -71,20 +71,20 @@ let gameStatusSelector = state => {
   let exploded =
     FieldsMap.exists(
       (_, data) =>
-        switch data {
+        switch (data) {
         | (Mine, Revealed) => true
         | _ => false
         },
-      fields
+      fields,
     );
   let safeRemaining =
     FieldsMap.exists(
       (_, data) =>
-        switch data {
+        switch (data) {
         | (Safe, Hidden) => true
         | _ => false
         },
-      fields
+      fields,
     );
   if (exploded) {
     Lost;
@@ -152,22 +152,22 @@ let revealFields = (state, toReveal) =>
   FieldsMap.mapi(
     (field, data) => {
       let shouldReveal = FieldsSet.mem(field, toReveal);
-      switch data {
+      switch (data) {
       | (contents, _) when shouldReveal => (contents, Revealed)
       | data => data
       };
     },
-    state.fields
+    state.fields,
   );
 
 let isPlaying = state => gameStatusSelector(state) == Playing;
 
 let reducer = (action, state) =>
-  switch action {
+  switch (action) {
   | Init(state) => ReasonReact.Update(state)
   | Reveal(field) when isPlaying(state) =>
     let data = FieldsMap.find(field, state.fields);
-    switch data {
+    switch (data) {
     | (_, Revealed) =>
       let neighbours = fieldNeighboursSelector(state, field);
       let (markedNeighbours, nonMarkedNeighbours) =
@@ -177,7 +177,7 @@ let reducer = (action, state) =>
             | (_, Marked) => true
             | _ => false
             },
-          neighbours
+          neighbours,
         );
       let mines = adjacentMinesSelector(state, field);
       switch (List.length(markedNeighbours)) {
@@ -197,12 +197,12 @@ let reducer = (action, state) =>
   | ToggleMarker(field) when isPlaying(state) =>
     let data = FieldsMap.find(field, state.fields);
     let newData =
-      switch data {
+      switch (data) {
       | (contents, Hidden) => Some((contents, Marked))
       | (contents, Marked) => Some((contents, Hidden))
       | _ => None
       };
-    switch newData {
+    switch (newData) {
     | Some(data) =>
       let fields = FieldsMap.add(field, data, state.fields);
       ReasonReact.Update({...state, fields});
@@ -219,13 +219,13 @@ module Field = {
   let make = (~mines, ~data, ~field, ~onClick, ~onDoubleClick, _children) => {
     ...component,
     retainedProps: {
-      data: data
+      data: data,
     },
     shouldUpdate: ({oldSelf, newSelf}) =>
       oldSelf.retainedProps.data !== newSelf.retainedProps.data,
     render: _self => {
       let buttonContent =
-        switch data {
+        switch (data) {
         | (_, Hidden) => ""
         | (_, Marked) => {js|🚩|js}
         | (Safe, Revealed) => mines |> string_of_int
@@ -233,17 +233,17 @@ module Field = {
         };
       let baseClassName = "game__board-field";
       let revealedClassName =
-        switch data {
+        switch (data) {
         | (_, Revealed) => {j|$baseClassName--revealed|j}
         | _ => ""
         };
       let minesClassName =
-        switch data {
+        switch (data) {
         | (Safe, Revealed) => {j|$baseClassName--$mines|j}
         | _ => ""
         };
       let explosionClassName =
-        switch data {
+        switch (data) {
         | (Mine, Revealed) => {j|$baseClassName--exploded|j}
         | _ => ""
         };
@@ -252,16 +252,16 @@ module Field = {
           baseClassName,
           revealedClassName,
           minesClassName,
-          explosionClassName
+          explosionClassName,
         ]);
       let onClick = _evt => onClick(field);
       let onDoubleClick = _event => onDoubleClick(field);
       <Double_click onClick onDoubleClick>
         ...<div className>
-             <button type_="button"> (str(buttonContent)) </button>
+             <button type_="button"> {str(buttonContent)} </button>
            </div>
       </Double_click>;
-    }
+    },
   };
 };
 
@@ -280,8 +280,8 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
       Array.of_list @@
       List.map(
         y =>
-          <div className="game__board-row" key=(string_of_int(y))>
-            (
+          <div className="game__board-row" key={string_of_int(y)}>
+            {
               arr @@
               Array.of_list @@
               List.map(
@@ -302,17 +302,17 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
                     onClick
                     onDoubleClick
                     mines
-                    key=(string_of_int(x))
+                    key={string_of_int(x)}
                   />;
                 },
-                xs
+                xs,
               )
-            )
+            }
           </div>,
-        ys
+        ys,
       );
     let buttonContents =
-      switch gameStatus {
+      switch (gameStatus) {
       | Playing => {js|🙂|js}
       | Won => {js|😎|js}
       | Lost => {js|😵|js}
@@ -320,28 +320,33 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
     let startButtonClick = _evt =>
       send(
         Init(
-          initializeState(~width=state.width, ~height=state.height, ~mines, ())
-        )
+          initializeState(
+            ~width=state.width,
+            ~height=state.height,
+            ~mines,
+            (),
+          ),
+        ),
       );
     let remainingMines = remainingMinesSelector(state);
     <section className="game__wrapper">
       <div className="game">
         <div className="game__header">
           <div className="game__remaining-mines">
-            (str(remainingMines |> string_of_int))
+            {str(remainingMines |> string_of_int)}
           </div>
           <button
             type_="button"
             className="game__start-button"
             onClick=startButtonClick>
-            (str(buttonContents))
+            {str(buttonContents)}
           </button>
         </div>
         <div className="game__board"> rows </div>
       </div>
       <p className="instructions">
-        (str("double-click to reveal a field / click to mark a field"))
+        {str("double-click to reveal a field / click to mark a field")}
       </p>
     </section>;
-  }
+  },
 };

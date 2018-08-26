@@ -3,8 +3,7 @@ type state = {
   timeoutId: ref(option(Js.Global.timeoutId)),
 };
 
-type action =
-  | NullAction;
+type action = unit;
 
 let component = ReasonReact.reducerComponent("DoubleClick");
 
@@ -21,21 +20,24 @@ let make = (~onClick as onSingleClick, ~onDoubleClick, children) => {
       let lastClickAt = state.lastClickAt.contents;
       let isDoubleClick = lastClickAt +. thresholdMs > now;
       state.lastClickAt := now;
+
       switch (state.timeoutId.contents) {
       | Some(id) => Js.Global.clearTimeout(id)
       | None => ()
       };
+
       if (isDoubleClick) {
         onDoubleClick(evt);
       } else {
+        ReactEvent.Synthetic.persist(evt);
         let timeoutId =
-          Js.Global.setTimeout(
-            () => onSingleClick(evt),
-            thresholdMs |> int_of_float,
-          );
+          thresholdMs
+          |> int_of_float
+          |> Js.Global.setTimeout(() => onSingleClick(evt));
         state.timeoutId := Some(timeoutId);
       };
     };
+
     <div onClick> children </div>;
   },
 };

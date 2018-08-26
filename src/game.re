@@ -86,12 +86,10 @@ let gameStatusSelector = state => {
         },
       fields,
     );
-  if (exploded) {
-    Lost;
-  } else if (safeRemaining) {
-    Playing;
-  } else {
-    Won;
+  switch((exploded, safeRemaining)) {
+  | (false, false) => Won;
+  | (true, _) => Lost;
+  | (_, true) => Playing;
   };
 };
 

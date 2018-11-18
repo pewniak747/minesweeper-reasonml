@@ -284,30 +284,30 @@ describe("Game.gameStatusSelector", () => {
   });
 });
 
-describe("Game.adjacentMinesSelector", () => {
+describe("Game.adjacentMinesCountSelector", () => {
   test("returns 0 if no Mines in field neighbourhood", () => {
-    let mines = adjacentMinesSelector(initialState, (2, 1));
+    let mines = adjacentMinesCountSelector(initialState, (2, 1));
     expect(mines) |> toBe(0);
   });
   test("returns 0 if no Mines in field neighbourhood (board corner)", () => {
-    let mines = adjacentMinesSelector(initialState, (0, 0));
+    let mines = adjacentMinesCountSelector(initialState, (0, 0));
     expect(mines) |> toBe(0);
   });
   test("returns 0 if no Mines in field neighbourhood (board side)", () => {
-    let mines = adjacentMinesSelector(initialState, (4, 1));
+    let mines = adjacentMinesCountSelector(initialState, (4, 1));
     expect(mines) |> toBe(0);
   });
   test("returns 1 if one Mine in field neighbourhood", () => {
-    let mines = adjacentMinesSelector(initialState, (1, 1));
+    let mines = adjacentMinesCountSelector(initialState, (1, 1));
     expect(mines) |> toBe(1);
   });
   test("returns n if n Mines in field neighbourhood", () => {
-    let mines = adjacentMinesSelector(initialState, (3, 2));
+    let mines = adjacentMinesCountSelector(initialState, (3, 2));
     expect(mines) |> toBe(2);
   });
 });
 
-describe("Game.remainingMinesSelector", () =>
+describe("Game.remainingMinesCountSelector", () =>
   test("returns the number of mines minus the number of marked fields", () => {
     let state =
       makeState([|
@@ -316,6 +316,6 @@ describe("Game.remainingMinesSelector", () =>
         [|o, o, o, s, o|],
         [|x, o, o, o, fx|],
       |]);
-    expect(remainingMinesSelector(state)) |> toBe(1);
+    expect(remainingMinesCountSelector(state)) |> toBe(1);
   })
 );

@@ -70,7 +70,7 @@ if (List.length(neighbourDiff) != 8) {
   failwith("nighbourDiff should contain exactly 8 items");
 };
 
-let fieldNeighboursSelector = (state, field) => {
+let fieldNeighboursSelector = (state: state, field: field): list(field) => {
   let {width, height} = state;
   let (x, y) = field;
   neighbourDiff
@@ -78,31 +78,37 @@ let fieldNeighboursSelector = (state, field) => {
   |> List.keep(_, ((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
-let fieldDataSelector = (state, field): fieldData =>
+let fieldDataSelector = (state: state, field: field): fieldData =>
   Map.getExn(state.fields, field);
 
-let adjacentMinesSelector = (state, field) =>
+let adjacentMinesCountSelector = (state: state, field: field): int =>
   fieldNeighboursSelector(state, field)
   |> List.map(_, neighbour => fieldDataSelector(state, neighbour))
   |> List.keep(_, ((contents, _)) => contents == Mine)
   |> List.length;
 
-let minesCountSelector = state =>
+let minesCountSelector = (state: state): int =>
   state.fields
   |> Map.keep(_, (_, (contents, _)) => contents == Mine)
   |> Map.size;
 
-let markedCountSelector = state =>
+let markedCountSelector = (state: state): int =>
   state.fields
   |> Map.keep(_, (_, (_, visibility)) => visibility == Marked)
   |> Map.size;
 
-let revealedCountSelector = state =>
+let revealedCountSelector = (state: state): int =>
   state.fields
   |> Map.keep(_, (_, (_, visibility)) => visibility == Revealed)
   |> Map.size;
 
-let gameStatusSelector = state => {
+let remainingMinesCountSelector = (state: state): int => {
+  let mines = minesCountSelector(state);
+  let marked = markedCountSelector(state);
+  mines - marked;
+};
+
+let gameStatusSelector = (state: state): status => {
   let fields = state.fields;
   let exploded =
     Map.some(fields, (_, data) =>
@@ -123,12 +129,6 @@ let gameStatusSelector = state => {
   | (true, _) => Lost
   | (_, true) => Playing
   };
-};
-
-let remainingMinesSelector = state => {
-  let mines = minesCountSelector(state);
-  let marked = markedCountSelector(state);
-  mines - marked;
 };
 
 let add2 = (map, (key, value)) => Map.set(map, key, value);
@@ -181,7 +181,7 @@ let rec reinitializeStateWithSafeField =
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
   let (contents, _) = fieldDataSelector(state, field);
-  let mines = adjacentMinesSelector(state, field);
+  let mines = adjacentMinesCountSelector(state, field);
   let accWithFieldRevealed = Set.add(acc, field);
   switch (mines, contents) {
   | (0, Safe) =>
@@ -252,7 +252,7 @@ let reducer = (action, state) =>
           | _ => false
           }
         );
-      let mines = adjacentMinesSelector(state, field);
+      let mines = adjacentMinesCountSelector(state, field);
       if (List.length(markedNeighbours) == mines) {
         let toReveal =
           nonMarkedNeighbours
@@ -369,7 +369,7 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
                   };
                 let onClick = field => send(ToggleMarker(field));
                 let onDoubleClick = field => send(Reveal(field));
-                let mines = adjacentMinesSelector(state, field);
+                let mines = adjacentMinesCountSelector(state, field);
                 <Field
                   field
                   data=displayedData
@@ -400,7 +400,7 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
           ),
         ),
       );
-    let remainingMines = remainingMinesSelector(state);
+    let remainingMines = remainingMinesCountSelector(state);
     <section className="game__wrapper">
       <div className="game">
         <div className="game__header">

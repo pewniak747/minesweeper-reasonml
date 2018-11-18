@@ -89,6 +89,16 @@ let minesCountSelector = state =>
   |> Map.keep(_, (_, (contents, _)) => contents == Mine)
   |> Map.size;
 
+let markedCountSelector = state =>
+  state.fields
+  |> Map.keep(_, (_, (_, visibility)) => visibility == Marked)
+  |> Map.size;
+
+let revealedCountSelector = state =>
+  state.fields
+  |> Map.keep(_, (_, (_, visibility)) => visibility == Revealed)
+  |> Map.size;
+
 let gameStatusSelector = state => {
   let fields = state.fields;
   let exploded =
@@ -114,10 +124,7 @@ let gameStatusSelector = state => {
 
 let remainingMinesSelector = state => {
   let mines = minesCountSelector(state);
-  let marked =
-    state.fields
-    |> Map.keep(_, (_, (_, visibility)) => visibility == Marked)
-    |> Map.size;
+  let marked = markedCountSelector(state);
   mines - marked;
 };
 
@@ -211,10 +218,7 @@ let reducer = (action, state) =>
     /**
      * First reveal must not be a mine. Create new fields if necessary.
      */
-    let firstReveal =
-      state.fields
-      |> Map.keep(_, (_, (_, visibility)) => visibility == Revealed)
-      |> Map.isEmpty;
+    let firstReveal = revealedCountSelector(state) == 0;
     let state =
       switch (firstReveal) {
       | false => state

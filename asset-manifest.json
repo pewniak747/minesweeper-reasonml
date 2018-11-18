@@ -1,7 +1,14 @@
 {
-  "main.css": "static/css/main.ac0e699c.css",
-  "main.css.map": "static/css/main.ac0e699c.css.map",
-  "main.js": "static/js/main.127434fe.js",
-  "main.js.map": "static/js/main.127434fe.js.map",
-  "static/media/logo.svg": "static/media/logo.e2342b05.svg"
+  "main.css": "/minesweeper-reasonml/static/css/main.9190437c.chunk.css",
+  "main.js": "/minesweeper-reasonml/static/js/main.06de2a9c.chunk.js",
+  "main.js.map": "/minesweeper-reasonml/static/js/main.06de2a9c.chunk.js.map",
+  "static/js/1.f4e49a89.chunk.js": "/minesweeper-reasonml/static/js/1.f4e49a89.chunk.js",
+  "static/js/1.f4e49a89.chunk.js.map": "/minesweeper-reasonml/static/js/1.f4e49a89.chunk.js.map",
+  "runtime~main.js": "/minesweeper-reasonml/static/js/runtime~main.d2c2ef3f.js",
+  "runtime~main.js.map": "/minesweeper-reasonml/static/js/runtime~main.d2c2ef3f.js.map",
+  "static/media/logo.svg": "/minesweeper-reasonml/static/media/logo.e2342b05.svg",
+  "static/css/main.9190437c.chunk.css.map": "/minesweeper-reasonml/static/css/main.9190437c.chunk.css.map",
+  "index.html": "/minesweeper-reasonml/index.html",
+  "precache-manifest.e6d2032f37e4bdf08e3e49cf6e592265.js": "/minesweeper-reasonml/precache-manifest.e6d2032f37e4bdf08e3e49cf6e592265.js",
+  "service-worker.js": "/minesweeper-reasonml/service-worker.js"
 }

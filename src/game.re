@@ -303,8 +303,18 @@ let reducer = (action, state) =>
  */
 module Field = {
   type retainedProps = {data: fieldData};
+
   let component = ReasonReact.statelessComponentWithRetainedProps("Field");
-  let make = (~mines, ~data, ~field, ~onClick, ~onDoubleClick, _children) => {
+
+  let make =
+      (
+        ~mines: int,
+        ~field: field,
+        ~data: fieldData,
+        ~onClick: field => unit,
+        ~onDoubleClick: field => unit,
+        _children,
+      ) => {
     ...component,
     retainedProps: {
       data: data,
@@ -386,10 +396,10 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
                 let mines = adjacentMinesCountSelector(state, field);
                 <Field
                   field
+                  mines
                   data=displayedData
                   onClick
                   onDoubleClick
-                  mines
                   key={string_of_int(x)}
                 />;
               },

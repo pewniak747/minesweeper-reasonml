@@ -18,9 +18,9 @@ type fieldContents =
   | Mine
   | Safe;
 
-type fieldData = (fieldContents, fieldVisibility);
+type fieldState = (fieldContents, fieldVisibility);
 
-type status =
+type gameStatus =
   | Playing
   | Won
   | Lost;
@@ -56,7 +56,7 @@ module FieldsSet = {
 type state = {
   width: int,
   height: int,
-  fields: FieldsMap.t(fieldData),
+  fields: FieldsMap.t(fieldState),
 };
 
 /**
@@ -87,12 +87,12 @@ let fieldNeighboursSelector = (state: state, field: field): list(field) => {
   |> List.keep(_, ((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
-let fieldDataSelector = (state: state, field: field): fieldData =>
+let fieldStateSelector = (state: state, field: field): fieldState =>
   Map.getExn(state.fields, field);
 
 let adjacentMinesCountSelector = (state: state, field: field): int =>
   fieldNeighboursSelector(state, field)
-  |> List.map(_, neighbour => fieldDataSelector(state, neighbour))
+  |> List.map(_, neighbour => fieldStateSelector(state, neighbour))
   |> List.keep(_, ((contents, _)) => contents == Mine)
   |> List.length;
 
@@ -117,18 +117,18 @@ let remainingMinesCountSelector = (state: state): int => {
   mines - marked;
 };
 
-let gameStatusSelector = (state: state): status => {
+let gameStatusSelector = (state: state): gameStatus => {
   let fields = state.fields;
   let exploded =
-    Map.some(fields, (_, data) =>
-      switch (data) {
+    Map.some(fields, (_, fieldState) =>
+      switch (fieldState) {
       | (Mine, Revealed) => true
       | _ => false
       }
     );
   let safeRemaining =
-    Map.some(fields, (_, data) =>
-      switch (data) {
+    Map.some(fields, (_, fieldState) =>
+      switch (fieldState) {
       | (Safe, Hidden) => true
       | _ => false
       }
@@ -153,16 +153,16 @@ let initializeState = (~width: int, ~height: int, ~mines: int, ()): state => {
     failwith("Too many mines for the board");
   };
   let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.fromList;
-  let makeFieldWithData = field => {
+  let makeFieldWithState = field => {
     let contents = Set.has(minedFields, field) ? Mine : Safe;
-    let data = (contents, Hidden);
-    (field, data);
+    let fieldState = (contents, Hidden);
+    (field, fieldState);
   };
-  let fieldsWithData =
+  let fieldsWithState =
     fields
-    |> List.map(_, makeFieldWithData)
+    |> List.map(_, makeFieldWithState)
     |> List.reduce(_, FieldsMap.empty, add2);
-  {width, height, fields: fieldsWithData};
+  {width, height, fields: fieldsWithState};
 };
 
 let rec reinitializeStateWithSafeField =
@@ -175,7 +175,8 @@ let rec reinitializeStateWithSafeField =
           (),
         )
         : state => {
-  let (revealingContents, _visibility) = fieldDataSelector(state, safeField);
+  let (revealingContents, _visibility) =
+    fieldStateSelector(state, safeField);
   switch (revealingContents) {
   | Safe => state
   | Mine =>
@@ -192,7 +193,7 @@ let rec reinitializeStateWithSafeField =
 };
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
-  let (contents, _) = fieldDataSelector(state, field);
+  let (contents, _) = fieldStateSelector(state, field);
   let mines = adjacentMinesCountSelector(state, field);
   let accWithFieldRevealed = Set.add(acc, field);
   switch (mines, contents) {
@@ -212,11 +213,11 @@ let fieldsToReveal = (state, field) =>
 let revealFields = (state, toReveal) =>
   Map.mapWithKey(
     state.fields,
-    (field, data) => {
+    (field, fieldState) => {
       let shouldReveal = Set.has(toReveal, field);
-      switch (data) {
+      switch (fieldState) {
       | (contents, _) when shouldReveal => (contents, Revealed)
-      | data => data
+      | fieldState => fieldState
       };
     },
   );
@@ -249,8 +250,8 @@ let reducer = (action, state) =>
     /**
      * Proceed with the reveal
      */
-    let data = fieldDataSelector(state, field);
-    switch (data) {
+    let fieldState = fieldStateSelector(state, field);
+    switch (fieldState) {
     | (_contents, Revealed) =>
       /*
        * Revealing already revealed field reveals all its neighbours
@@ -259,7 +260,7 @@ let reducer = (action, state) =>
       let neighbours = fieldNeighboursSelector(state, field);
       let (markedNeighbours, nonMarkedNeighbours) =
         List.partition(neighbours, neighbour =>
-          switch (fieldDataSelector(state, neighbour)) {
+          switch (fieldStateSelector(state, neighbour)) {
           | (_, Marked) => true
           | _ => false
           }
@@ -281,16 +282,16 @@ let reducer = (action, state) =>
       ReasonReact.Update({...state, fields});
     };
   | ToggleMarker(field) when isPlaying(state) =>
-    let data = fieldDataSelector(state, field);
-    let newData =
-      switch (data) {
+    let fieldState = fieldStateSelector(state, field);
+    let newFieldState =
+      switch (fieldState) {
       | (contents, Hidden) => Some((contents, Marked))
       | (contents, Marked) => Some((contents, Hidden))
       | (_contents, Revealed) => None
       };
-    switch (newData) {
-    | Some(data) =>
-      let fields = Map.set(state.fields, field, data);
+    switch (newFieldState) {
+    | Some(fieldState) =>
+      let fields = Map.set(state.fields, field, fieldState);
       ReasonReact.Update({...state, fields});
     | None => ReasonReact.NoUpdate
     };
@@ -302,7 +303,7 @@ let reducer = (action, state) =>
  * GAME UI
  */
 module Field = {
-  type retainedProps = {data: fieldData};
+  type retainedProps = {fieldState};
 
   let component = ReasonReact.statelessComponentWithRetainedProps("Field");
 
@@ -310,20 +311,20 @@ module Field = {
       (
         ~mines: int,
         ~field: field,
-        ~data: fieldData,
+        ~fieldState: fieldState,
         ~onClick: field => unit,
         ~onDoubleClick: field => unit,
         _children,
       ) => {
     ...component,
     retainedProps: {
-      data: data,
+      fieldState: fieldState,
     },
     shouldUpdate: ({oldSelf, newSelf}) =>
-      oldSelf.retainedProps.data !== newSelf.retainedProps.data,
+      oldSelf.retainedProps.fieldState !== newSelf.retainedProps.fieldState,
     render: _self => {
       let buttonContent =
-        switch (data) {
+        switch (fieldState) {
         | (_, Hidden) => ""
         | (_, Marked) => {js|🚩|js}
         | (Safe, Revealed) => mines |> string_of_int
@@ -331,17 +332,17 @@ module Field = {
         };
       let baseClassName = "game__board-field";
       let revealedClassName =
-        switch (data) {
+        switch (fieldState) {
         | (_, Revealed) => {j|$baseClassName--revealed|j}
         | _ => ""
         };
       let minesClassName =
-        switch (data) {
+        switch (fieldState) {
         | (Safe, Revealed) => {j|$baseClassName--$mines|j}
         | _ => ""
         };
       let explosionClassName =
-        switch (data) {
+        switch (fieldState) {
         | (Mine, Revealed) => {j|$baseClassName--exploded|j}
         | _ => ""
         };
@@ -385,11 +386,11 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
               xs,
               x => {
                 let field = (x, y);
-                let data = fieldDataSelector(state, field);
-                let displayedData =
-                  switch (gameStatus, data) {
+                let fieldState = fieldStateSelector(state, field);
+                let displayedFieldState =
+                  switch (gameStatus, fieldState) {
                   | (Won, (Mine, _)) => (Mine, Marked)
-                  | (_, data) => data
+                  | (_, fieldState) => fieldState
                   };
                 let onClick = field => send(ToggleMarker(field));
                 let onDoubleClick = field => send(Reveal(field));
@@ -397,7 +398,7 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
                 <Field
                   field
                   mines
-                  data=displayedData
+                  fieldState=displayedFieldState
                   onClick
                   onDoubleClick
                   key={string_of_int(x)}

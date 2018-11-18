@@ -39,7 +39,9 @@ let makeState = matrix: state => {
   let fields: list((int, int)) =
     cartesian(range(0, width), range(0, height));
   let fieldsWithData =
-    List.fold_left(
+    List.reduce(
+      fields,
+      FieldsMap.empty,
       (acc, field) => {
         let data =
           switch (field) {
@@ -47,8 +49,6 @@ let makeState = matrix: state => {
           };
         FieldsMap.add(field, data, acc);
       },
-      FieldsMap.empty,
-      fields,
     );
   {width, height, fields: fieldsWithData};
 };

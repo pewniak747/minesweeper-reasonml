@@ -19,6 +19,8 @@ type status =
   | Won
   | Lost;
 
+module List = Belt.List;
+
 module OrderedFields = {
   type t = field;
   let compare = ((x0, y0): t, (x1, y1): t) =>
@@ -46,7 +48,7 @@ type action =
 /* Selectors - computing values based on game state */
 let neighbourDiff =
   cartesian([(-1), 0, 1], [(-1), 0, 1])
-  |> List.filter(((x, y)) => x != 0 || y != 0);
+  |> List.keep(_, ((x, y)) => x != 0 || y != 0);
 
 if (List.length(neighbourDiff) != 8) {
   failwith("nighbourDiff should contain exactly 8 items");
@@ -56,14 +58,14 @@ let fieldNeighboursSelector = (state, field) => {
   let {width, height} = state;
   let (x, y) = field;
   neighbourDiff
-  |> List.map(((dx, dy)) => (x + dx, y + dy))
-  |> List.filter(((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
+  |> List.map(_, ((dx, dy)) => (x + dx, y + dy))
+  |> List.keep(_, ((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
 let adjacentMinesSelector = (state, field) =>
   fieldNeighboursSelector(state, field)
-  |> List.map(field => FieldsMap.find(field, state.fields))
-  |> List.filter(((contents, _)) => contents == Mine)
+  |> List.map(_, field => FieldsMap.find(field, state.fields))
+  |> List.keep(_, ((contents, _)) => contents == Mine)
   |> List.length;
 
 let gameStatusSelector = state => {
@@ -86,10 +88,10 @@ let gameStatusSelector = state => {
         },
       fields,
     );
-  switch((exploded, safeRemaining)) {
-  | (false, false) => Won;
-  | (true, _) => Lost;
-  | (_, true) => Playing;
+  switch (exploded, safeRemaining) {
+  | (false, false) => Won
+  | (true, _) => Lost
+  | (_, true) => Playing
   };
 };
 
@@ -123,8 +125,8 @@ let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
   };
   let fieldsWithData =
     fields
-    |> List.map(makeFieldWithData)
-    |> List.fold_left(add2, FieldsMap.empty);
+    |> List.map(_, makeFieldWithData)
+    |> List.reduce(_, FieldsMap.empty, add2);
   {width, height, fields: fieldsWithData};
 };
 
@@ -138,7 +140,7 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
       FieldsSet.mem(neighbour, acc) ?
         acc : accumulateFieldsToReveal(state, neighbour, acc);
     fieldNeighboursSelector(state, field)
-    |> List.fold_left(visitNeighbour, accWithField);
+    |> List.reduce(_, accWithField, visitNeighbour);
   | _ => accWithField
   };
 };
@@ -169,20 +171,19 @@ let reducer = (action, state) =>
     | (_, Revealed) =>
       let neighbours = fieldNeighboursSelector(state, field);
       let (markedNeighbours, nonMarkedNeighbours) =
-        List.partition(
-          neighbour =>
-            switch (FieldsMap.find(neighbour, state.fields)) {
-            | (_, Marked) => true
-            | _ => false
-            },
-          neighbours,
+        List.partition(neighbours, neighbour =>
+          switch (FieldsMap.find(neighbour, state.fields)) {
+          | (_, Marked) => true
+          | _ => false
+          }
         );
       let mines = adjacentMinesSelector(state, field);
       switch (List.length(markedNeighbours)) {
       | x when x == mines =>
         let toReveal =
-          List.map(fieldsToReveal(state), nonMarkedNeighbours)
-          |> List.fold_left(FieldsSet.union, FieldsSet.empty);
+          nonMarkedNeighbours
+          |> List.map(_, fieldsToReveal(state))
+          |> List.reduce(_, FieldsSet.empty, FieldsSet.union);
         let fields = revealFields(state, toReveal);
         ReasonReact.Update({...state, fields});
       | _ => ReasonReact.NoUpdate
@@ -275,39 +276,37 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
     let gameStatus = gameStatusSelector(state);
     let rows =
       arr @@
-      Array.of_list @@
-      List.map(
-        y =>
-          <div className="game__board-row" key={string_of_int(y)}>
-            {
-              arr @@
-              Array.of_list @@
-              List.map(
-                x => {
-                  let field = (x, y);
-                  let data = FieldsMap.find(field, state.fields);
-                  let displayedData =
-                    switch (gameStatus, data) {
-                    | (Won, (Mine, _)) => (Mine, Marked)
-                    | (_, data) => data
-                    };
-                  let onClick = field => send(ToggleMarker(field));
-                  let onDoubleClick = field => send(Reveal(field));
-                  let mines = adjacentMinesSelector(state, field);
-                  <Field
-                    field
-                    data=displayedData
-                    onClick
-                    onDoubleClick
-                    mines
-                    key={string_of_int(x)}
-                  />;
-                },
-                xs,
-              )
-            }
-          </div>,
-        ys,
+      List.toArray @@
+      List.map(ys, y =>
+        <div className="game__board-row" key={string_of_int(y)}>
+          {
+            arr @@
+            List.toArray @@
+            List.map(
+              xs,
+              x => {
+                let field = (x, y);
+                let data = FieldsMap.find(field, state.fields);
+                let displayedData =
+                  switch (gameStatus, data) {
+                  | (Won, (Mine, _)) => (Mine, Marked)
+                  | (_, data) => data
+                  };
+                let onClick = field => send(ToggleMarker(field));
+                let onDoubleClick = field => send(Reveal(field));
+                let mines = adjacentMinesSelector(state, field);
+                <Field
+                  field
+                  data=displayedData
+                  onClick
+                  onDoubleClick
+                  mines
+                  key={string_of_int(x)}
+                />;
+              },
+            )
+          }
+        </div>
       );
     let buttonContents =
       switch (gameStatus) {

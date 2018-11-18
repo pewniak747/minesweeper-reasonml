@@ -1,6 +1,12 @@
 open Utils;
 
-/* Types */
+module List = Belt.List;
+module Map = Belt.Map;
+module Set = Belt.Set;
+
+/**
+ * CORE TYPES
+ */
 type field = (int, int);
 
 type fieldVisibility =
@@ -18,10 +24,6 @@ type status =
   | Playing
   | Won
   | Lost;
-
-module List = Belt.List;
-module Map = Belt.Map;
-module Set = Belt.Set;
 
 module FieldsComparator =
   Belt.Id.MakeComparable({
@@ -44,23 +46,31 @@ module FieldsSet = {
 
   let empty: t = Set.make(~id=(module FieldsComparator));
 
-  let fromList = (input: list(FieldsComparator.t)): t => {
+  let fromList = (input: list(FieldsComparator.t)): t =>
     input |> List.toArray |> Set.mergeMany(empty);
-  };
 };
 
+/**
+ * GAME STATE
+ */
 type state = {
   width: int,
   height: int,
   fields: FieldsMap.t(fieldData),
 };
 
+/**
+ * GAME ACTIONS
+ */
 type action =
   | Init(state)
   | Reveal(field)
   | ToggleMarker(field);
 
-/* Selectors - computing values based on game state */
+/**
+ * SELECTORS
+ * These functions compute values based on game state
+ */
 let neighbourDiff =
   cartesian([(-1), 0, 1], [(-1), 0, 1])
   |> List.keep(_, ((x, y)) => x != 0 || y != 0);
@@ -132,7 +142,9 @@ let gameStatusSelector = (state: state): status => {
 
 let add2 = (map, (key, value)) => Map.set(map, key, value);
 
-/* Game actions logic */
+/**
+ * GAME LOGIC
+ */
 let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
   let xs = range(0, width);
   let ys = range(0, height);
@@ -285,7 +297,9 @@ let reducer = (action, state) =>
   | ToggleMarker(_field) => ReasonReact.NoUpdate
   };
 
-/* Game UI */
+/**
+ * GAME UI
+ */
 module Field = {
   type retainedProps = {data: fieldData};
   let component = ReasonReact.statelessComponentWithRetainedProps("Field");

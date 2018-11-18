@@ -126,10 +126,17 @@ describe("Game.reducer", () => {
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
     });
     test("sets a Mined field to Revealed state", () => {
+      let initialState =
+        makeState([|
+          [|s, o, o, o, o|],
+          [|o, o, x, o, o|],
+          [|o, o, o, o, o|],
+          [|o, o, o, o, x|],
+        |]);
       let action = Reveal((2, 1));
       let expectedState =
         makeState([|
-          [|o, o, o, o, o|],
+          [|s, o, o, o, o|],
           [|o, o, m, o, o|],
           [|o, o, o, o, o|],
           [|o, o, o, o, x|],
@@ -173,6 +180,27 @@ describe("Game.reducer", () => {
         expect(update) |> toEqual(ReasonReact.NoUpdate);
       },
     );
+    test(
+      "creates a new arrangement of fields if first revealed field would be a mine",
+      () => {
+      let initialState =
+        makeState([|
+          [|x, x, x, x, x|],
+          [|x, x, x, x, x|],
+          [|x, o, x, x, x|],
+          [|x, x, x, x, x|],
+        |]);
+      let action = Reveal((3, 2));
+      let update = reducer(action, initialState);
+      let expectedState =
+        makeState([|
+          [|x, x, x, x, x|],
+          [|x, x, x, x, x|],
+          [|x, x, x, s, x|],
+          [|x, x, x, x, x|],
+        |]);
+      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+    });
     test("does nothing in Lost state", () => {
       let action = Reveal((3, 0));
       let update = reducer(action, initialLostState);

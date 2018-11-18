@@ -84,6 +84,11 @@ let adjacentMinesSelector = (state, field) =>
   |> List.keep(_, ((contents, _)) => contents == Mine)
   |> List.length;
 
+let minesCountSelector = state =>
+  state.fields
+  |> Map.keep(_, (_, (contents, _)) => contents == Mine)
+  |> Map.size;
+
 let gameStatusSelector = state => {
   let fields = state.fields;
   let exploded =
@@ -108,10 +113,7 @@ let gameStatusSelector = state => {
 };
 
 let remainingMinesSelector = state => {
-  let mines =
-    state.fields
-    |> Map.keep(_, (_, (contents, _)) => contents == Mine)
-    |> Map.size;
+  let mines = minesCountSelector(state);
   let marked =
     state.fields
     |> Map.keep(_, (_, (_, visibility)) => visibility == Marked)
@@ -140,6 +142,34 @@ let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
     |> List.map(_, makeFieldWithData)
     |> List.reduce(_, FieldsMap.make(), add2);
   {width, height, fields: fieldsWithData};
+};
+
+let rec reinitializeStateWithSafeField =
+        (
+          ~state: state,
+          ~width: int,
+          ~height: int,
+          ~mines: int,
+          ~safeField: field,
+          (),
+        ) => {
+  let revealingMine =
+    state.fields
+    |> Map.getExn(_, safeField)
+    |> (((contents, _visibility)) => contents == Mine);
+  switch (revealingMine) {
+  | false => state
+  | true =>
+    let newState = initializeState(~width, ~height, ~mines, ());
+    reinitializeStateWithSafeField(
+      ~state=newState,
+      ~width,
+      ~height,
+      ~mines,
+      ~safeField,
+      (),
+    );
+  };
 };
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
@@ -178,6 +208,31 @@ let reducer = (action, state) =>
   switch (action) {
   | Init(state) => ReasonReact.Update(state)
   | Reveal(field) when isPlaying(state) =>
+    /**
+     * First reveal must not be a mine. Create new fields if necessary.
+     */
+    let firstReveal =
+      state.fields
+      |> Map.keep(_, (_, (_, visibility)) => visibility == Revealed)
+      |> Map.isEmpty;
+    let state =
+      switch (firstReveal) {
+      | false => state
+      | true =>
+        let mines = minesCountSelector(state);
+        reinitializeStateWithSafeField(
+          ~state,
+          ~width=state.width,
+          ~height=state.height,
+          ~mines,
+          ~safeField=field,
+          (),
+        );
+      };
+
+    /**
+     * Proceed with the reveal
+     */
     let data = Map.getExn(state.fields, field);
     switch (data) {
     | (_contents, Revealed) =>

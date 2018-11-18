@@ -95,7 +95,7 @@ let initialWonState =
 describe("Game.reducer", () => {
   describe("Init action", () =>
     test("replaces the state with new one", () => {
-      let expectedState = initializeState();
+      let expectedState = initializeState(~width=10, ~height=8, ~mines=5, ());
       let update = reducer(Init(expectedState), initialState);
       expect(update) |> toEqual(ReasonReact.Update(expectedState));
     })

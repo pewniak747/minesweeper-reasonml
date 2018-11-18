@@ -145,7 +145,7 @@ let add2 = (map, (key, value)) => Map.set(map, key, value);
 /**
  * GAME LOGIC
  */
-let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
+let initializeState = (~width: int, ~height: int, ~mines: int, ()): state => {
   let xs = range(0, width);
   let ys = range(0, height);
   let fields = cartesian(xs, ys);
@@ -173,7 +173,8 @@ let rec reinitializeStateWithSafeField =
           ~mines: int,
           ~safeField: field,
           (),
-        ) => {
+        )
+        : state => {
   let (revealingContents, _visibility) = fieldDataSelector(state, safeField);
   switch (revealingContents) {
   | Safe => state

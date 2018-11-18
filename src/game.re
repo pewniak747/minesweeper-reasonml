@@ -36,16 +36,15 @@ module FieldsComparator =
 module FieldsMap = {
   type t('value) = Map.t(field, 'value, FieldsComparator.identity);
 
-  let make = (): t('value) => Map.make(~id=(module FieldsComparator));
+  let empty: t('value) = Map.make(~id=(module FieldsComparator));
 };
 
 module FieldsSet = {
   type t = Set.t(FieldsComparator.t, FieldsComparator.identity);
 
-  let make = (): t => Set.make(~id=(module FieldsComparator));
+  let empty: t = Set.make(~id=(module FieldsComparator));
 
   let fromList = (input: list(FieldsComparator.t)): t => {
-    let empty = make();
     input |> List.toArray |> Set.mergeMany(empty);
   };
 };
@@ -150,7 +149,7 @@ let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
   let fieldsWithData =
     fields
     |> List.map(_, makeFieldWithData)
-    |> List.reduce(_, FieldsMap.make(), add2);
+    |> List.reduce(_, FieldsMap.empty, add2);
   {width, height, fields: fieldsWithData};
 };
 
@@ -195,7 +194,7 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
 };
 
 let fieldsToReveal = (state, field) =>
-  accumulateFieldsToReveal(state, field, FieldsSet.make());
+  accumulateFieldsToReveal(state, field, FieldsSet.empty);
 
 let revealFields = (state, toReveal) =>
   Map.mapWithKey(
@@ -257,7 +256,7 @@ let reducer = (action, state) =>
         let toReveal =
           nonMarkedNeighbours
           |> List.map(_, fieldsToReveal(state))
-          |> List.reduce(_, FieldsSet.make(), Set.union);
+          |> List.reduce(_, FieldsSet.empty, Set.union);
         let fields = revealFields(state, toReveal);
         ReasonReact.Update({...state, fields});
       } else {

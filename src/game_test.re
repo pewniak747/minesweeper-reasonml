@@ -44,7 +44,7 @@ let makeState = matrix: state => {
   let fieldsWithData =
     List.reduce(
       fields,
-      FieldsMap.make(),
+      FieldsMap.empty,
       (acc, field) => {
         let data =
           switch (field) {

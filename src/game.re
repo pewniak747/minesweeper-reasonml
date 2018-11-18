@@ -78,9 +78,12 @@ let fieldNeighboursSelector = (state, field) => {
   |> List.keep(_, ((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
+let fieldDataSelector = (state, field): fieldData =>
+  Map.getExn(state.fields, field);
+
 let adjacentMinesSelector = (state, field) =>
   fieldNeighboursSelector(state, field)
-  |> List.map(_, field => Map.getExn(state.fields, field))
+  |> List.map(_, neighbour => fieldDataSelector(state, neighbour))
   |> List.keep(_, ((contents, _)) => contents == Mine)
   |> List.length;
 
@@ -160,13 +163,10 @@ let rec reinitializeStateWithSafeField =
           ~safeField: field,
           (),
         ) => {
-  let revealingMine =
-    state.fields
-    |> Map.getExn(_, safeField)
-    |> (((contents, _visibility)) => contents == Mine);
-  switch (revealingMine) {
-  | false => state
-  | true =>
+  let (revealingContents, _visibility) = fieldDataSelector(state, safeField);
+  switch (revealingContents) {
+  | Safe => state
+  | Mine =>
     let newState = initializeState(~width, ~height, ~mines, ());
     reinitializeStateWithSafeField(
       ~state=newState,
@@ -180,8 +180,8 @@ let rec reinitializeStateWithSafeField =
 };
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
+  let (contents, _) = fieldDataSelector(state, field);
   let mines = adjacentMinesSelector(state, field);
-  let (contents, _) = Map.getExn(state.fields, field);
   let accWithFieldRevealed = Set.add(acc, field);
   switch (mines, contents) {
   | (0, Safe) =>
@@ -237,7 +237,7 @@ let reducer = (action, state) =>
     /**
      * Proceed with the reveal
      */
-    let data = Map.getExn(state.fields, field);
+    let data = fieldDataSelector(state, field);
     switch (data) {
     | (_contents, Revealed) =>
       /*
@@ -247,7 +247,7 @@ let reducer = (action, state) =>
       let neighbours = fieldNeighboursSelector(state, field);
       let (markedNeighbours, nonMarkedNeighbours) =
         List.partition(neighbours, neighbour =>
-          switch (Map.getExn(state.fields, neighbour)) {
+          switch (fieldDataSelector(state, neighbour)) {
           | (_, Marked) => true
           | _ => false
           }
@@ -269,7 +269,7 @@ let reducer = (action, state) =>
       ReasonReact.Update({...state, fields});
     };
   | ToggleMarker(field) when isPlaying(state) =>
-    let data = Map.getExn(state.fields, field);
+    let data = fieldDataSelector(state, field);
     let newData =
       switch (data) {
       | (contents, Hidden) => Some((contents, Marked))
@@ -361,7 +361,7 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
               xs,
               x => {
                 let field = (x, y);
-                let data = Map.getExn(state.fields, field);
+                let data = fieldDataSelector(state, field);
                 let displayedData =
                   switch (gameStatus, data) {
                   | (Won, (Mine, _)) => (Mine, Marked)

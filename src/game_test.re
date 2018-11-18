@@ -19,17 +19,18 @@ describe("Game.initializeState", _ => {
     expect(state.height) |> toBe(4)
   );
   test("constructs a game state with correct number of fields", () => {
-    let count = state.fields |> FieldsMap.cardinal;
+    let count = Map.size(state.fields);
     expect(count) |> toBe(12);
   });
   test("constructs a game state with correct number of Mine fields", () => {
-    let onlyMined = FieldsMap.filter((_, (contents, _)) => contents == Mine);
-    let mines = state.fields |> onlyMined |> FieldsMap.cardinal;
+    let onlyMined = fields =>
+      Map.keep(fields, (_, (contents, _)) => contents == Mine);
+    let mines = state.fields |> onlyMined |> Map.size;
     expect(mines) |> toBe(5);
   });
   test("constructs a game state with all fields Hidden", () => {
-    let isHidden = (_, (_, visibility)) => visibility == Hidden;
-    expect(state.fields |> FieldsMap.for_all(isHidden)) |> toBe(true);
+    let isHidden = (field, (_, visibility)) => visibility == Hidden;
+    expect(Map.every(state.fields, isHidden)) |> toBe(true);
   });
 });
 
@@ -41,13 +42,13 @@ let makeState = matrix: state => {
   let fieldsWithData =
     List.reduce(
       fields,
-      FieldsMap.empty,
+      FieldsMap.make(),
       (acc, field) => {
         let data =
           switch (field) {
           | (x, y) => matrix[y][x]
           };
-        FieldsMap.add(field, data, acc);
+        Map.set(acc, field, data);
       },
     );
   {width, height, fields: fieldsWithData};

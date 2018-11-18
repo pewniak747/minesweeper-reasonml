@@ -20,19 +20,35 @@ type status =
   | Lost;
 
 module List = Belt.List;
+module Map = Belt.Map;
+module Set = Belt.Set;
 
-module OrderedFields = {
-  type t = field;
-  let compare = ((x0, y0): t, (x1, y1): t) =>
-    switch (Pervasives.compare(x0, x1)) {
-    | 0 => Pervasives.compare(y0, y1)
-    | c => c
-    };
+module FieldsComparator =
+  Belt.Id.MakeComparable({
+    type t = field;
+    let cmp = ((x0, y0): t, (x1, y1): t) =>
+      switch (Pervasives.compare(x0, x1)) {
+      | 0 => Pervasives.compare(y0, y1)
+      | c => c
+      };
+  });
+
+module FieldsMap = {
+  type t('value) = Map.t(field, 'value, FieldsComparator.identity);
+
+  let make = (): t('value) => Map.make(~id=(module FieldsComparator));
 };
 
-module FieldsMap = Map.Make(OrderedFields);
+module FieldsSet = {
+  type t = Set.t(FieldsComparator.t, FieldsComparator.identity);
 
-module FieldsSet = Set.Make(OrderedFields);
+  let make = (): t => Set.make(~id=(module FieldsComparator));
+
+  let fromList = (input: list(FieldsComparator.t)): t => {
+    let empty = make();
+    input |> List.toArray |> Set.mergeMany(empty);
+  };
+};
 
 type state = {
   width: int,
@@ -64,29 +80,25 @@ let fieldNeighboursSelector = (state, field) => {
 
 let adjacentMinesSelector = (state, field) =>
   fieldNeighboursSelector(state, field)
-  |> List.map(_, field => FieldsMap.find(field, state.fields))
+  |> List.map(_, field => Map.getExn(state.fields, field))
   |> List.keep(_, ((contents, _)) => contents == Mine)
   |> List.length;
 
 let gameStatusSelector = state => {
   let fields = state.fields;
   let exploded =
-    FieldsMap.exists(
-      (_, data) =>
-        switch (data) {
-        | (Mine, Revealed) => true
-        | _ => false
-        },
-      fields,
+    Map.some(fields, (_, data) =>
+      switch (data) {
+      | (Mine, Revealed) => true
+      | _ => false
+      }
     );
   let safeRemaining =
-    FieldsMap.exists(
-      (_, data) =>
-        switch (data) {
-        | (Safe, Hidden) => true
-        | _ => false
-        },
-      fields,
+    Map.some(fields, (_, data) =>
+      switch (data) {
+      | (Safe, Hidden) => true
+      | _ => false
+      }
     );
   switch (exploded, safeRemaining) {
   | (false, false) => Won
@@ -98,16 +110,16 @@ let gameStatusSelector = state => {
 let remainingMinesSelector = state => {
   let mines =
     state.fields
-    |> FieldsMap.filter((_, (contents, _)) => contents == Mine)
-    |> FieldsMap.cardinal;
+    |> Map.keep(_, (_, (contents, _)) => contents == Mine)
+    |> Map.size;
   let marked =
     state.fields
-    |> FieldsMap.filter((_, (_, visibility)) => visibility == Marked)
-    |> FieldsMap.cardinal;
+    |> Map.keep(_, (_, (_, visibility)) => visibility == Marked)
+    |> Map.size;
   mines - marked;
 };
 
-let add2 = (map, (key, value)) => FieldsMap.add(key, value, map);
+let add2 = (map, (key, value)) => Map.set(map, key, value);
 
 /* Game actions logic */
 let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
@@ -117,47 +129,47 @@ let initializeState = (~width=10, ~height=8, ~mines=5, ()) => {
   if (List.length(fields) <= mines) {
     failwith("Too many mines for the board");
   };
-  let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.of_list;
+  let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.fromList;
   let makeFieldWithData = field => {
-    let contents = FieldsSet.mem(field, minedFields) ? Mine : Safe;
+    let contents = Set.has(minedFields, field) ? Mine : Safe;
     let data = (contents, Hidden);
     (field, data);
   };
   let fieldsWithData =
     fields
     |> List.map(_, makeFieldWithData)
-    |> List.reduce(_, FieldsMap.empty, add2);
+    |> List.reduce(_, FieldsMap.make(), add2);
   {width, height, fields: fieldsWithData};
 };
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
   let mines = adjacentMinesSelector(state, field);
-  let contents = fst(FieldsMap.find(field, state.fields));
-  let accWithField = FieldsSet.add(field, acc);
+  let (contents, _) = Map.getExn(state.fields, field);
+  let accWithFieldRevealed = Set.add(acc, field);
   switch (mines, contents) {
   | (0, Safe) =>
     let visitNeighbour = (acc, neighbour) =>
-      FieldsSet.mem(neighbour, acc) ?
+      Set.has(acc, neighbour) ?
         acc : accumulateFieldsToReveal(state, neighbour, acc);
     fieldNeighboursSelector(state, field)
-    |> List.reduce(_, accWithField, visitNeighbour);
-  | _ => accWithField
+    |> List.reduce(_, accWithFieldRevealed, visitNeighbour);
+  | _ => accWithFieldRevealed
   };
 };
 
 let fieldsToReveal = (state, field) =>
-  accumulateFieldsToReveal(state, field, FieldsSet.empty);
+  accumulateFieldsToReveal(state, field, FieldsSet.make());
 
 let revealFields = (state, toReveal) =>
-  FieldsMap.mapi(
+  Map.mapWithKey(
+    state.fields,
     (field, data) => {
-      let shouldReveal = FieldsSet.mem(field, toReveal);
+      let shouldReveal = Set.has(toReveal, field);
       switch (data) {
       | (contents, _) when shouldReveal => (contents, Revealed)
       | data => data
       };
     },
-    state.fields,
   );
 
 let isPlaying = state => gameStatusSelector(state) == Playing;
@@ -166,13 +178,13 @@ let reducer = (action, state) =>
   switch (action) {
   | Init(state) => ReasonReact.Update(state)
   | Reveal(field) when isPlaying(state) =>
-    let data = FieldsMap.find(field, state.fields);
+    let data = Map.getExn(state.fields, field);
     switch (data) {
     | (_, Revealed) =>
       let neighbours = fieldNeighboursSelector(state, field);
       let (markedNeighbours, nonMarkedNeighbours) =
         List.partition(neighbours, neighbour =>
-          switch (FieldsMap.find(neighbour, state.fields)) {
+          switch (Map.getExn(state.fields, neighbour)) {
           | (_, Marked) => true
           | _ => false
           }
@@ -183,7 +195,7 @@ let reducer = (action, state) =>
         let toReveal =
           nonMarkedNeighbours
           |> List.map(_, fieldsToReveal(state))
-          |> List.reduce(_, FieldsSet.empty, FieldsSet.union);
+          |> List.reduce(_, FieldsSet.make(), Set.union);
         let fields = revealFields(state, toReveal);
         ReasonReact.Update({...state, fields});
       | _ => ReasonReact.NoUpdate
@@ -194,7 +206,7 @@ let reducer = (action, state) =>
       ReasonReact.Update({...state, fields});
     };
   | ToggleMarker(field) when isPlaying(state) =>
-    let data = FieldsMap.find(field, state.fields);
+    let data = Map.getExn(state.fields, field);
     let newData =
       switch (data) {
       | (contents, Hidden) => Some((contents, Marked))
@@ -203,7 +215,7 @@ let reducer = (action, state) =>
       };
     switch (newData) {
     | Some(data) =>
-      let fields = FieldsMap.add(field, data, state.fields);
+      let fields = Map.set(state.fields, field, data);
       ReasonReact.Update({...state, fields});
     | None => ReasonReact.NoUpdate
     };
@@ -286,7 +298,7 @@ let make = (~width: int, ~height: int, ~mines: int, _children) => {
               xs,
               x => {
                 let field = (x, y);
-                let data = FieldsMap.find(field, state.fields);
+                let data = Map.getExn(state.fields, field);
                 let displayedData =
                   switch (gameStatus, data) {
                   | (Won, (Mine, _)) => (Mine, Marked)

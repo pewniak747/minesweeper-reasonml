@@ -17,7 +17,7 @@ let cartesian = (l1: list('a), l2: list('a)): list(('a, 'a)) =>
 
 let shuffle = List.shuffle;
 
-let rec take = (n: int, lst: list('a)): list('a) =>
+let take = (n: int, lst: list('a)): list('a) =>
   switch (List.take(lst, n)) {
   | Some(taken) => taken
   | None => lst

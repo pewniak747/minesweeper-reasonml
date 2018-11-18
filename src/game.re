@@ -153,7 +153,7 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
         acc : accumulateFieldsToReveal(state, neighbour, acc);
     fieldNeighboursSelector(state, field)
     |> List.reduce(_, accWithFieldRevealed, visitNeighbour);
-  | _ => accWithFieldRevealed
+  | (_, Safe | Mine) => accWithFieldRevealed
   };
 };
 
@@ -180,7 +180,11 @@ let reducer = (action, state) =>
   | Reveal(field) when isPlaying(state) =>
     let data = Map.getExn(state.fields, field);
     switch (data) {
-    | (_, Revealed) =>
+    | (_contents, Revealed) =>
+      /*
+       * Revealing already revealed field reveals all its neighbours
+       * if enough fields are marked around it
+       */
       let neighbours = fieldNeighboursSelector(state, field);
       let (markedNeighbours, nonMarkedNeighbours) =
         List.partition(neighbours, neighbour =>
@@ -190,17 +194,17 @@ let reducer = (action, state) =>
           }
         );
       let mines = adjacentMinesSelector(state, field);
-      switch (List.length(markedNeighbours)) {
-      | x when x == mines =>
+      if (List.length(markedNeighbours) == mines) {
         let toReveal =
           nonMarkedNeighbours
           |> List.map(_, fieldsToReveal(state))
           |> List.reduce(_, FieldsSet.make(), Set.union);
         let fields = revealFields(state, toReveal);
         ReasonReact.Update({...state, fields});
-      | _ => ReasonReact.NoUpdate
+      } else {
+        ReasonReact.NoUpdate;
       };
-    | _ =>
+    | (_contents, Hidden | Marked) =>
       let toReveal = fieldsToReveal(state, field);
       let fields = revealFields(state, toReveal);
       ReasonReact.Update({...state, fields});
@@ -211,7 +215,7 @@ let reducer = (action, state) =>
       switch (data) {
       | (contents, Hidden) => Some((contents, Marked))
       | (contents, Marked) => Some((contents, Hidden))
-      | _ => None
+      | (_contents, Revealed) => None
       };
     switch (newData) {
     | Some(data) =>

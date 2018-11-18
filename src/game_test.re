@@ -6,6 +6,8 @@ open Game;
 
 open Utils;
 
+module List = Belt.List;
+
 describe("Game.initializeState", _ => {
   let state = initializeState(~width=3, ~height=4, ~mines=5, ());
   test("constructs a new Playing game state", _ => {
@@ -29,7 +31,7 @@ describe("Game.initializeState", _ => {
     expect(mines) |> toBe(5);
   });
   test("constructs a game state with all fields Hidden", () => {
-    let isHidden = (field, (_, visibility)) => visibility == Hidden;
+    let isHidden = (_field, (_, visibility)) => visibility == Hidden;
     expect(Map.every(state.fields, isHidden)) |> toBe(true);
   });
 });

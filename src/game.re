@@ -143,7 +143,7 @@ let makeStateWithFieldsState =
   {width, height, fields: fieldsWithStateMap};
 };
 
-let makeState =
+let makeStateWithFieldsContents =
     (~width, ~height, ~fieldsWithContents: list((field, fieldContents)))
     : state => {
   let fieldsWithState =
@@ -166,7 +166,7 @@ let initializeState = (~width: int, ~height: int, ~mines: int): state => {
     (field, contents);
   };
   let fieldsWithContents = List.map(fields, makeFieldWithContents);
-  makeState(~width, ~height, ~fieldsWithContents);
+  makeStateWithFieldsContents(~width, ~height, ~fieldsWithContents);
 };
 
 let rec reinitializeStateWithSafeField =

@@ -62,7 +62,7 @@ let make = (~message, _children) => {
           | Normal => (16, 16, 40)
           | Hard => (30, 16, 99)
           };
-        <Game width height mines />;
+        <Ui.Game width height mines />;
       };
     <div className="app">
       <div className="app__header">

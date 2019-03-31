@@ -9,30 +9,30 @@ open Utils;
 module List = Belt.List;
 
 describe("Game.initializeState", _ => {
-  let state = initializeState(~width=3, ~height=4, ~mines=5, ());
+  let state = initializeState(~width=3, ~height=4, ~mines=5);
   test("constructs a new Playing game state", _ => {
     let status = gameStatusSelector(state);
     expect(status) |> toBe(Playing);
   });
   test("constructs a game state with correct board width", () =>
-    expect(state.width) |> toBe(3)
+    expect(Game.gameWidthSelector(state)) |> toBe(3)
   );
   test("constructs a game state with correct board height", () =>
-    expect(state.height) |> toBe(4)
+    expect(Game.gameHeightSelector(state)) |> toBe(4)
   );
   test("constructs a game state with correct number of fields", () => {
-    let count = Map.size(state.fields);
+    let count = state |> Game.fieldsSelector |> List.length;
     expect(count) |> toBe(12);
   });
   test("constructs a game state with correct number of Mine fields", () => {
     let onlyMined = fields =>
-      Map.keep(fields, (_, (contents, _)) => contents == Mine);
-    let mines = state.fields |> onlyMined |> Map.size;
+      List.keep(fields, ((_, (contents, _))) => contents == Mine);
+    let mines = state |> Game.fieldsSelector |> onlyMined |> List.length;
     expect(mines) |> toBe(5);
   });
   test("constructs a game state with all fields Hidden", () => {
-    let isHidden = (_field, (_, visibility)) => visibility == Hidden;
-    expect(Map.every(state.fields, isHidden)) |> toBe(true);
+    let isHidden = ((_field, (_, visibility))) => visibility == Hidden;
+    expect(List.every(Game.fieldsSelector(state), isHidden)) |> toBe(true);
   });
 });
 
@@ -41,19 +41,16 @@ let makeState = matrix: state => {
   let width = Array.length(matrix[0]);
   let fields: list((int, int)) =
     cartesian(range(0, width), range(0, height));
-  let fieldsWithData =
-    List.reduce(
+  let fieldsWithState =
+    List.map(
       fields,
-      FieldsMap.empty,
-      (acc, field) => {
-        let data =
-          switch (field) {
-          | (x, y) => matrix[y][x]
-          };
-        Map.set(acc, field, data);
+      field => {
+        let (x, y) = field;
+        let data = matrix[y][x];
+        (field, data);
       },
     );
-  {width, height, fields: fieldsWithData};
+  Game.makeStateWithFieldsState(~width, ~height, ~fieldsWithState);
 };
 
 let m = (Mine, Revealed);
@@ -92,12 +89,12 @@ let initialWonState =
     [|s, s, s, s, x|],
   |]);
 
-describe("Game.reducer", () => {
+describe("Game.update", () => {
   describe("Init action", () =>
     test("replaces the state with new one", () => {
-      let expectedState = initializeState(~width=10, ~height=8, ~mines=5, ());
-      let update = reducer(Init(expectedState), initialState);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      let expectedState = initializeState(~width=10, ~height=8, ~mines=5);
+      let update = update(Init(expectedState), initialState);
+      expect(update) |> toEqual(expectedState);
     })
   );
   describe("Reveal action", () => {
@@ -110,8 +107,8 @@ describe("Game.reducer", () => {
           [|o, o, o, s, o|],
           [|o, o, o, o, x|],
         |]);
-      let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      let update = update(action, initialState);
+      expect(update) |> toEqual(expectedState);
     });
     test("sets the field's neighbourhood to Revealed if it has no Mines", () => {
       let action = Reveal((0, 3));
@@ -122,8 +119,8 @@ describe("Game.reducer", () => {
           [|s, s, s, s, o|],
           [|s, s, s, s, x|],
         |]);
-      let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      let update = update(action, initialState);
+      expect(update) |> toEqual(expectedState);
     });
     test("sets a Mined field to Revealed state", () => {
       let initialState =
@@ -141,8 +138,8 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, o, o, x|],
         |]);
-      let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      let update = update(action, initialState);
+      expect(update) |> toEqual(expectedState);
     });
     test(
       "reveals the un-Marked neighbouring fields if field already Revealed", () => {
@@ -154,7 +151,7 @@ describe("Game.reducer", () => {
           [|x, o, o, o, fx|],
         |]);
       let action = Reveal((3, 2));
-      let update = reducer(action, initialState);
+      let update = update(action, initialState);
       /* TODO: flood the upper left corner? */
       let expectedState =
         makeState([|
@@ -163,7 +160,7 @@ describe("Game.reducer", () => {
           [|o, s, s, s, s|],
           [|x, s, s, s, fx|],
         |]);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      expect(update) |> toEqual(expectedState);
     });
     test(
       "does nothing if already Revealed field does not have matching number of Marked neighbours",
@@ -176,8 +173,8 @@ describe("Game.reducer", () => {
             [|x, o, o, o, x|],
           |]);
         let action = Reveal((3, 2));
-        let update = reducer(action, initialState);
-        expect(update) |> toEqual(ReasonReact.NoUpdate);
+        let update = update(action, initialState);
+        expect(update) |> toBe(initialState);
       },
     );
     test(
@@ -191,7 +188,7 @@ describe("Game.reducer", () => {
           [|x, x, x, x, x|],
         |]);
       let action = Reveal((3, 2));
-      let update = reducer(action, initialState);
+      let update = update(action, initialState);
       let expectedState =
         makeState([|
           [|x, x, x, x, x|],
@@ -199,17 +196,17 @@ describe("Game.reducer", () => {
           [|x, x, x, s, x|],
           [|x, x, x, x, x|],
         |]);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      expect(update) |> toEqual(expectedState);
     });
     test("does nothing in Lost state", () => {
       let action = Reveal((3, 0));
-      let update = reducer(action, initialLostState);
-      expect(update) |> toEqual(ReasonReact.NoUpdate);
+      let update = update(action, initialLostState);
+      expect(update) |> toBe(initialLostState);
     });
     test("does nothing in Won state", () => {
       let action = Reveal((3, 1));
-      let update = reducer(action, initialLostState);
-      expect(update) |> toEqual(ReasonReact.NoUpdate);
+      let update = update(action, initialWonState);
+      expect(update) |> toBe(initialWonState);
     });
   });
   describe("ToggleMarker action", () => {
@@ -222,8 +219,8 @@ describe("Game.reducer", () => {
           [|o, o, o, fo, o|],
           [|o, o, o, o, x|],
         |]);
-      let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      let update = update(action, initialState);
+      expect(update) |> toEqual(expectedState);
     });
     test("sets a Marked field to Hidden state", () => {
       let initialState =
@@ -241,8 +238,8 @@ describe("Game.reducer", () => {
           [|o, o, o, o, o|],
           [|o, o, o, o, x|],
         |]);
-      let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.Update(expectedState));
+      let update = update(action, initialState);
+      expect(update) |> toEqual(expectedState);
     });
     test("does nothing if field already Revealed", () => {
       let initialState =
@@ -253,18 +250,18 @@ describe("Game.reducer", () => {
           [|o, o, o, o, x|],
         |]);
       let action = ToggleMarker((3, 2));
-      let update = reducer(action, initialState);
-      expect(update) |> toEqual(ReasonReact.NoUpdate);
+      let update = update(action, initialState);
+      expect(update) |> toBe(initialState);
     });
     test("does nothing in Lost state", () => {
       let action = ToggleMarker((3, 0));
-      let update = reducer(action, initialLostState);
-      expect(update) |> toEqual(ReasonReact.NoUpdate);
+      let update = update(action, initialLostState);
+      expect(update) |> toBe(initialLostState);
     });
     test("does nothing in Won state", () => {
       let action = ToggleMarker((3, 1));
-      let update = reducer(action, initialLostState);
-      expect(update) |> toEqual(ReasonReact.NoUpdate);
+      let update = update(action, initialWonState);
+      expect(update) |> toBe(initialWonState);
     });
   });
 });

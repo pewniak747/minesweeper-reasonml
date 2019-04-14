@@ -27,28 +27,28 @@ let make = (~message) => {
     | None =>
       let choose = (difficulty, _evt) => send(ChooseDifficulty(difficulty));
       <div className="difficulties__wrapper">
-        <h3> {str("Choose difficulty")} </h3>
+        <h3> {React.string("Choose difficulty")} </h3>
         <div className="difficulties">
           <button
             type_="button"
             className="difficulty"
             onClick={choose(Easy)}
             title="Easy">
-            {str({j|😌|j})}
+            {React.string({j|😌|j})}
           </button>
           <button
             type_="button"
             className="difficulty"
             onClick={choose(Normal)}
             title="Normal">
-            {str({j|😐|j})}
+            {React.string({j|😐|j})}
           </button>
           <button
             type_="button"
             className="difficulty"
             onClick={choose(Hard)}
             title="Hard">
-            {str({j|😱|j})}
+            {React.string({j|😱|j})}
           </button>
         </div>
       </div>;
@@ -64,17 +64,17 @@ let make = (~message) => {
   <div className="app">
     <div className="app__header">
       <a href=""> <img src=logo className="app__logo" alt="logo" /> </a>
-      <h2> {str(message)} </h2>
+      <h2> {React.string(message)} </h2>
       <p className="app__credits">
-        {str("by ")}
+        {React.string("by ")}
         <a href="http://pewniak747.info" target="_blank">
-          {str({js|Tomasz Pewiński|js})}
+          {React.string({js|Tomasz Pewiński|js})}
         </a>
-        {str({js| · |js})}
+        {React.string({js| · |js})}
         <a
           href="https://github.com/pewniak747/minesweeper-reasonml"
           target="_blank">
-          {str("source")}
+          {React.string("source")}
         </a>
       </p>
     </div>

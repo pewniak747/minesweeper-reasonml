@@ -44,7 +44,7 @@ module Field = {
     let onDoubleClick = _event => onDoubleClick(field);
     <Double_click onClick onDoubleClick>
       ...<div className>
-           <button type_="button"> {str(buttonContent)} </button>
+           <button type_="button"> {React.string(buttonContent)} </button>
          </div>
     </Double_click>;
   };
@@ -69,11 +69,11 @@ module Game = {
     let ys = range(0, height);
     let gameStatus = Game.gameStatusSelector(state);
     let rows =
-      arr @@
+      React.array @@
       List.toArray @@
       List.map(ys, y =>
         <div className="game__board-row" key={string_of_int(y)}>
-          {arr @@
+          {React.array @@
            List.toArray @@
            List.map(
              xs,
@@ -113,19 +113,21 @@ module Game = {
       <div className="game">
         <div className="game__header">
           <div className="game__remaining-mines">
-            {str(remainingMines |> string_of_int)}
+            {React.string(string_of_int(remainingMines))}
           </div>
           <button
             type_="button"
             className="game__start-button"
             onClick=startButtonClick>
-            {str(buttonContents)}
+            {React.string(buttonContents)}
           </button>
         </div>
         <div className="game__board"> rows </div>
       </div>
       <p className="instructions">
-        {str("double-click to reveal a field / click to mark a field")}
+        {React.string(
+           "double-click to reveal a field / click to mark a field",
+         )}
       </p>
     </section>;
   };

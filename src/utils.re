@@ -1,10 +1,6 @@
 /* Utilities */
 module List = Belt.List;
 
-let str = React.string;
-
-let arr = React.array;
-
 let rec range = (start: int, end_: int): list(int) =>
   if (start >= end_) {
     [];

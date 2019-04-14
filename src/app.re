@@ -2,8 +2,6 @@
 
 [@bs.module] external logo: string = "./logo.svg";
 
-open Utils;
-
 type difficulty =
   | Easy
   | Normal
@@ -14,7 +12,7 @@ type state = option(difficulty);
 type action =
   | ChooseDifficulty(difficulty);
 
-let reducer = (state: state, action: action) =>
+let reducer = (_state: state, action: action) =>
   switch (action) {
   | ChooseDifficulty(difficulty) => Some(difficulty)
   };

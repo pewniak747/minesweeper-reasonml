@@ -48,6 +48,14 @@ module Field = {
          </div>
     </Double_click>;
   };
+
+  let arePropsEqual = (oldProps, newProps) => {
+    let oldState: Game.fieldState = oldProps##fieldState;
+    let newState: Game.fieldState = newProps##fieldState;
+    oldState === newState;
+  };
+
+  let make = React.memoCustomCompareProps(make, arePropsEqual);
 };
 
 module Game = {

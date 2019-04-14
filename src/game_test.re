@@ -36,7 +36,7 @@ describe("Game.initializeState", _ => {
   });
 });
 
-let makeState = matrix: state => {
+let makeState = (matrix): state => {
   let height = Array.length(matrix);
   let width = Array.length(matrix[0]);
   let fields: list((int, int)) =

@@ -1,9 +1,9 @@
 /* Utilities */
 module List = Belt.List;
 
-let str = ReasonReact.string;
+let str = React.string;
 
-let arr = ReasonReact.array;
+let arr = React.array;
 
 let rec range = (start: int, end_: int): list(int) =>
   if (start >= end_) {

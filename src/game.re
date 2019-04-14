@@ -201,8 +201,8 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
   switch (mines, contents) {
   | (0, Safe) =>
     let visitNeighbour = (acc, neighbour) =>
-      Set.has(acc, neighbour) ?
-        acc : accumulateFieldsToReveal(state, neighbour, acc);
+      Set.has(acc, neighbour)
+        ? acc : accumulateFieldsToReveal(state, neighbour, acc);
     fieldNeighboursSelector(state, field)
     |> List.reduce(_, accWithFieldRevealed, visitNeighbour);
   | (_, Safe | Mine) => accWithFieldRevealed

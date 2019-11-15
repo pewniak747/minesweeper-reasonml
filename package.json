@@ -26,10 +26,21 @@
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.9"
   },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(bs-platform|reason-react|@glennsl/bs-jest)/)"
+    ]
+  }
 }

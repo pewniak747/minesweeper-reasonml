@@ -4,28 +4,27 @@
   "private": true,
   "homepage": "https://pewniak747.github.io/minesweeper-reasonml",
   "dependencies": {
-    "bs-platform": "^5.0.0",
+    "bs-platform": "^5.2.1",
     "gh-pages": "^2.0.1",
-    "re-classnames": "^3.0.0",
+    "re-classnames": "^4.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "reason-react": "^0.7.0",
-    "reason-scripts": "^1.0.0"
+    "react-scripts": "3.2.0",
+    "reason-react": "^0.7.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "refmt": "find src -name '*.re*' | xargs node_modules/bs-platform/lib/refmt.exe --in-place",
+    "re:build": "bsb -make-world -clean-world",
+    "re:watch": "bsb -make-world -clean-world -w",
+    "re:fmt": "find src -name '*.re*' | xargs node_modules/bs-platform/lib/refmt.exe --in-place",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
   },
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.5"
-  },
-  "resolutions": {
-    "jest": "23.6.0"
   },
   "browserslist": [
     ">0.2%",

@@ -14,13 +14,18 @@ yarn
 ```
 
 **Start development server**
+
+```
+yarn re:watch
+```
+
 ```
 yarn start
 ```
 
 **Run tests**
 ```
-yarn test
+yarn re:build && yarn test
 ```
 
 [ReasonML]: https://reasonml.github.io

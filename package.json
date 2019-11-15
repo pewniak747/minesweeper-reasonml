@@ -26,6 +26,18 @@
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.9"
   },
+  "eslintConfig": {
+    "extends": "react-app",
+    "overrides": [
+      {
+        "files": ["*.js"],
+        "rules": {
+          "default-case": "off",
+          "no-throw-literal": "off"
+        }
+      }
+    ]
+  },
   "browserslist": {
     "production": [
       ">0.2%",

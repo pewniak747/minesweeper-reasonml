@@ -24,7 +24,7 @@
     "deploy": "gh-pages -d build"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.4.5"
+    "@glennsl/bs-jest": "^0.4.9"
   },
   "browserslist": [
     ">0.2%",

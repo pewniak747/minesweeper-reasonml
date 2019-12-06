@@ -50,9 +50,9 @@ module Field = {
     let onClick = _evt => onClick(field);
     let onDoubleClick = _event => onDoubleClick(field);
     <Double_click onClick onDoubleClick>
-      ...<div className>
-           <button type_="button"> {React.string(buttonContent)} </button>
-         </div>
+      <div className>
+        <button type_="button"> {React.string(buttonContent)} </button>
+      </div>
     </Double_click>;
   };
 

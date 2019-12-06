@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "https://pewniak747.github.io/minesweeper-reasonml",
   "dependencies": {
-    "bs-platform": "^5.2.1",
+    "bs-platform": "7.0.1",
     "gh-pages": "^2.0.1",
     "re-classnames": "^4.0.0",
     "react": "^16.8.6",
@@ -30,7 +30,9 @@
     "extends": "react-app",
     "overrides": [
       {
-        "files": ["*.js"],
+        "files": [
+          "*.js"
+        ],
         "rules": {
           "default-case": "off",
           "no-throw-literal": "off"

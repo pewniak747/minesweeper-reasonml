@@ -12,25 +12,25 @@ module Field = {
       ) => {
     let buttonContent =
       switch (fieldState) {
-      | (_, Hidden) => ""
-      | (_, Marked) => {js|🚩|js}
-      | (Safe, Revealed) => mines |> string_of_int
-      | (Mine, Revealed) => {js|💥|js}
+      | {visibility: Hidden} => ""
+      | {visibility: Marked} => {js|🚩|js}
+      | {visibility: Revealed, contents: Safe} => mines |> string_of_int
+      | {visibility: Revealed, contents: Mine} => {js|💥|js}
       };
     let baseClassName = "game__board-field";
     let revealedClassName =
       switch (fieldState) {
-      | (_, Revealed) => {j|$baseClassName--revealed|j}
+      | {visibility: Revealed} => {j|$baseClassName--revealed|j}
       | _ => ""
       };
     let minesClassName =
       switch (fieldState) {
-      | (Safe, Revealed) => {j|$baseClassName--$mines|j}
+      | {visibility: Revealed, contents: Safe} => {j|$baseClassName--$mines|j}
       | _ => ""
       };
     let explosionClassName =
       switch (fieldState) {
-      | (Mine, Revealed) => {j|$baseClassName--exploded|j}
+      | {visibility: Revealed, contents: Mine} => {j|$baseClassName--exploded|j}
       | _ => ""
       };
     let className =
@@ -90,8 +90,12 @@ module Game = {
                let fieldState = Game.fieldStateSelector(state, field);
                let displayedFieldState: Game.fieldState =
                  switch (gameStatus, fieldState) {
-                 | (Won, (Mine, _)) => (Mine, Marked)
-                 | (_, fieldState) => fieldState
+                 | (Won, {contents: Mine}) => {
+                     contents: Mine,
+                     visibility: Marked,
+                   }
+                 | (Won, {contents: Safe} as fieldState)
+                 | (Playing | Lost, fieldState) => fieldState
                  };
                let onClick = field => send(ToggleMarker(field));
                let onDoubleClick = field => send(Reveal(field));

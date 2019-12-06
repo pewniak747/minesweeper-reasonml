@@ -29,7 +29,10 @@ type fieldContents =
   | Mine
   | Safe;
 
-type fieldState = (fieldContents, fieldVisibility);
+type fieldState = {
+  contents: fieldContents,
+  visibility: fieldVisibility,
+};
 
 type gameStatus =
   | Playing

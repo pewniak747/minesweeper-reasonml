@@ -18,7 +18,10 @@ type fieldContents =
   | Mine
   | Safe;
 
-type fieldState = (fieldContents, fieldVisibility);
+type fieldState = {
+  contents: fieldContents,
+  visibility: fieldVisibility,
+};
 
 type gameStatus =
   | Playing
@@ -90,22 +93,22 @@ let fieldStateSelector = (state: state, field: field): fieldState =>
 let adjacentMinesCountSelector = (state: state, field: field): int =>
   fieldNeighboursSelector(state, field)
   |> List.map(_, neighbour => fieldStateSelector(state, neighbour))
-  |> List.keep(_, ((contents, _)) => contents == Mine)
+  |> List.keep(_, ({contents}) => contents == Mine)
   |> List.length;
 
 let minesCountSelector = (state: state): int =>
   state.fields
-  |> Map.keep(_, (_, (contents, _)) => contents == Mine)
+  |> Map.keep(_, (_, {contents}) => contents == Mine)
   |> Map.size;
 
 let markedCountSelector = (state: state): int =>
   state.fields
-  |> Map.keep(_, (_, (_, visibility)) => visibility == Marked)
+  |> Map.keep(_, (_, {visibility}) => visibility == Marked)
   |> Map.size;
 
 let revealedCountSelector = (state: state): int =>
   state.fields
-  |> Map.keep(_, (_, (_, visibility)) => visibility == Revealed)
+  |> Map.keep(_, (_, {visibility}) => visibility == Revealed)
   |> Map.size;
 
 let remainingMinesCountSelector = (state: state): int => {
@@ -119,14 +122,14 @@ let gameStatusSelector = (state: state): gameStatus => {
   let exploded =
     Map.some(fields, (_, fieldState) =>
       switch (fieldState) {
-      | (Mine, Revealed) => true
+      | {contents: Mine, visibility: Revealed} => true
       | _ => false
       }
     );
   let safeRemaining =
     Map.some(fields, (_, fieldState) =>
       switch (fieldState) {
-      | (Safe, Hidden) => true
+      | {contents: Safe, visibility: Hidden} => true
       | _ => false
       }
     );
@@ -151,7 +154,7 @@ let makeStateWithFieldsContents =
     : state => {
   let fieldsWithState =
     List.map(fieldsWithContents, ((field, contents)) =>
-      (field, (contents, Hidden))
+      (field, {contents, visibility: Hidden})
     );
   makeStateWithFieldsState(~width, ~height, ~fieldsWithState);
 };
@@ -181,8 +184,7 @@ let rec reinitializeStateWithSafeField =
           ~safeField: field,
         )
         : state => {
-  let (revealingContents, _visibility) =
-    fieldStateSelector(state, safeField);
+  let {contents: revealingContents} = fieldStateSelector(state, safeField);
   switch (revealingContents) {
   | Safe => state
   | Mine =>
@@ -198,7 +200,7 @@ let rec reinitializeStateWithSafeField =
 };
 
 let rec accumulateFieldsToReveal = (state, field, acc) => {
-  let (contents, _) = fieldStateSelector(state, field);
+  let {contents} = fieldStateSelector(state, field);
   let mines = adjacentMinesCountSelector(state, field);
   let accWithFieldRevealed = Set.add(acc, field);
   switch (mines, contents) {
@@ -221,7 +223,7 @@ let revealFields = (state, toReveal) =>
     (field, fieldState) => {
       let shouldReveal = Set.has(toReveal, field);
       switch (fieldState) {
-      | (contents, _) when shouldReveal => (contents, Revealed)
+      | fieldState when shouldReveal => {...fieldState, visibility: Revealed}
       | fieldState => fieldState
       };
     },
@@ -256,7 +258,7 @@ let update = (action, state) =>
      */
     let fieldState = fieldStateSelector(state, field);
     switch (fieldState) {
-    | (_contents, Revealed) =>
+    | {visibility: Revealed} =>
       /*
        * Revealing already revealed field reveals all its neighbours
        * if enough fields are marked around it
@@ -265,7 +267,7 @@ let update = (action, state) =>
       let (markedNeighbours, nonMarkedNeighbours) =
         List.partition(neighbours, neighbour =>
           switch (fieldStateSelector(state, neighbour)) {
-          | (_, Marked) => true
+          | {visibility: Marked} => true
           | _ => false
           }
         );
@@ -280,7 +282,7 @@ let update = (action, state) =>
       } else {
         state;
       };
-    | (_contents, Hidden | Marked) =>
+    | {visibility: Hidden | Marked} =>
       let toReveal = fieldsToReveal(state, field);
       let fields = revealFields(state, toReveal);
       {...state, fields};
@@ -289,9 +291,9 @@ let update = (action, state) =>
     let fieldState = fieldStateSelector(state, field);
     let newFieldState =
       switch (fieldState) {
-      | (contents, Hidden) => Some((contents, Marked))
-      | (contents, Marked) => Some((contents, Hidden))
-      | (_contents, Revealed) => None
+      | {visibility: Hidden} => Some({...fieldState, visibility: Marked})
+      | {visibility: Marked} => Some({...fieldState, visibility: Hidden})
+      | {visibility: Revealed} => None
       };
     switch (newFieldState) {
     | Some(fieldState) =>

@@ -2,7 +2,7 @@ open Jest;
 
 open Expect;
 
-open Game;
+open! Game;
 
 open Utils;
 
@@ -26,12 +26,12 @@ describe("Game.initializeState", _ => {
   });
   test("constructs a game state with correct number of Mine fields", () => {
     let onlyMined = fields =>
-      List.keep(fields, ((_, (contents, _))) => contents == Mine);
+      List.keep(fields, ((_, {contents})) => contents == Mine);
     let mines = state |> Game.fieldsSelector |> onlyMined |> List.length;
     expect(mines) |> toBe(5);
   });
   test("constructs a game state with all fields Hidden", () => {
-    let isHidden = ((_field, (_, visibility))) => visibility == Hidden;
+    let isHidden = ((_field, {visibility})) => visibility == Hidden;
     expect(List.every(Game.fieldsSelector(state), isHidden)) |> toBe(true);
   });
 });
@@ -54,17 +54,17 @@ let makeState = (matrix): state => {
   Game.makeStateWithFieldsState(~width, ~height, ~fieldsWithState);
 };
 
-let m = (Mine, Revealed);
+let m = {contents: Mine, visibility: Revealed};
 
-let s = (Safe, Revealed);
+let s = {contents: Safe, visibility: Revealed};
 
-let x = (Mine, Hidden);
+let x = {contents: Mine, visibility: Hidden};
 
-let o = (Safe, Hidden);
+let o = {contents: Safe, visibility: Hidden};
 
-let fx = (Mine, Marked);
+let fx = {contents: Mine, visibility: Marked};
 
-let fo = (Safe, Marked);
+let fo = {contents: Safe, visibility: Marked};
 
 let initialState =
   makeState([|

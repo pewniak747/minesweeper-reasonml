@@ -86,7 +86,7 @@ module Game = {
            List.map(
              xs,
              x => {
-               let field = (x, y);
+               let field: Game.field = {x, y};
                let fieldState = Game.fieldStateSelector(state, field);
                let displayedFieldState: Game.fieldState =
                  switch (gameStatus, fieldState) {

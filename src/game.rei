@@ -13,9 +13,12 @@
  */
 
 /**
- * Represents x, y field coordinates on a game board.
+ * Represents field coordinates on a game board.
  */
-type field = (int, int);
+type field = {
+  x: int,
+  y: int,
+};
 
 type fieldVisibility =
   | Hidden

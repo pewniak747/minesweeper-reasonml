@@ -4,7 +4,10 @@ module List = Belt.List;
 module Map = Belt.Map;
 module Set = Belt.Set;
 
-type field = (int, int);
+type field = {
+  x: int,
+  y: int,
+};
 
 type fieldVisibility =
   | Hidden
@@ -25,7 +28,7 @@ type gameStatus =
 module FieldsComparator =
   Belt.Id.MakeComparable({
     type t = field;
-    let cmp = ((x0, y0): t, (x1, y1): t) =>
+    let cmp = ({x: x0, y: y0}: t, {x: x1, y: y1}: t) =>
       switch (Pervasives.compare(x0, x1)) {
       | 0 => Pervasives.compare(y0, y1)
       | c => c
@@ -72,10 +75,10 @@ let gameHeightSelector = (state: state) => state.height;
 
 let fieldNeighboursSelector = (state: state, field: field): list(field) => {
   let {width, height} = state;
-  let (x, y) = field;
+  let {x, y} = field;
   neighbourDiff
-  |> List.map(_, ((dx, dy)) => (x + dx, y + dy))
-  |> List.keep(_, ((x, y)) => x >= 0 && x < width && y >= 0 && y < height);
+  |> List.map(_, ((dx, dy)) => {x: x + dx, y: y + dy})
+  |> List.keep(_, ({x, y}) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
 let fieldsSelector = (state: state): list((field, fieldState)) =>
@@ -156,7 +159,7 @@ let makeStateWithFieldsContents =
 let initializeState = (~width: int, ~height: int, ~mines: int): state => {
   let xs = range(0, width);
   let ys = range(0, height);
-  let fields = cartesian(xs, ys);
+  let fields = cartesian(xs, ys)->List.map(((x, y)) => {x, y});
   if (List.length(fields) <= mines) {
     failwith("Too many mines for the board");
   };

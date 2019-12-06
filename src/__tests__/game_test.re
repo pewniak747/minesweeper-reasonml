@@ -39,13 +39,14 @@ describe("Game.initializeState", _ => {
 let makeState = (matrix): state => {
   let height = Array.length(matrix);
   let width = Array.length(matrix[0]);
-  let fields: list((int, int)) =
-    cartesian(range(0, width), range(0, height));
+  let fields: list(Game.field) =
+    cartesian(range(0, width), range(0, height))
+    ->List.map(((x, y)) => {x, y});
   let fieldsWithState =
     List.map(
       fields,
       field => {
-        let (x, y) = field;
+        let {x, y} = field;
         let data = matrix[y][x];
         (field, data);
       },
@@ -99,7 +100,7 @@ describe("Game.update", () => {
   );
   describe("Reveal action", () => {
     test("sets a field to Revealed state", () => {
-      let action = Reveal((3, 2));
+      let action = Reveal({x: 3, y: 2});
       let expectedState =
         makeState([|
           [|o, o, o, o, o|],
@@ -111,7 +112,7 @@ describe("Game.update", () => {
       expect(update) |> toEqual(expectedState);
     });
     test("sets the field's neighbourhood to Revealed if it has no Mines", () => {
-      let action = Reveal((0, 3));
+      let action = Reveal({x: 0, y: 3});
       let expectedState =
         makeState([|
           [|s, s, o, o, o|],
@@ -130,7 +131,7 @@ describe("Game.update", () => {
           [|o, o, o, o, o|],
           [|o, o, o, o, x|],
         |]);
-      let action = Reveal((2, 1));
+      let action = Reveal({x: 2, y: 1});
       let expectedState =
         makeState([|
           [|s, o, o, o, o|],
@@ -150,7 +151,7 @@ describe("Game.update", () => {
           [|o, o, o, s, o|],
           [|x, o, o, o, fx|],
         |]);
-      let action = Reveal((3, 2));
+      let action = Reveal({x: 3, y: 2});
       let update = update(action, initialState);
       /* TODO: flood the upper left corner? */
       let expectedState =
@@ -172,7 +173,7 @@ describe("Game.update", () => {
             [|o, o, o, s, o|],
             [|x, o, o, o, x|],
           |]);
-        let action = Reveal((3, 2));
+        let action = Reveal({x: 3, y: 2});
         let update = update(action, initialState);
         expect(update) |> toBe(initialState);
       },
@@ -187,7 +188,7 @@ describe("Game.update", () => {
           [|x, o, x, x, x|],
           [|x, x, x, x, x|],
         |]);
-      let action = Reveal((3, 2));
+      let action = Reveal({x: 3, y: 2});
       let update = update(action, initialState);
       let expectedState =
         makeState([|
@@ -199,19 +200,19 @@ describe("Game.update", () => {
       expect(update) |> toEqual(expectedState);
     });
     test("does nothing in Lost state", () => {
-      let action = Reveal((3, 0));
+      let action = Reveal({x: 3, y: 0});
       let update = update(action, initialLostState);
       expect(update) |> toBe(initialLostState);
     });
     test("does nothing in Won state", () => {
-      let action = Reveal((3, 1));
+      let action = Reveal({x: 3, y: 1});
       let update = update(action, initialWonState);
       expect(update) |> toBe(initialWonState);
     });
   });
   describe("ToggleMarker action", () => {
     test("sets a Hidden field to Marked state", () => {
-      let action = ToggleMarker((3, 2));
+      let action = ToggleMarker({x: 3, y: 2});
       let expectedState =
         makeState([|
           [|o, o, o, o, o|],
@@ -230,7 +231,7 @@ describe("Game.update", () => {
           [|o, o, o, fo, o|],
           [|o, o, o, o, x|],
         |]);
-      let action = ToggleMarker((3, 2));
+      let action = ToggleMarker({x: 3, y: 2});
       let expectedState =
         makeState([|
           [|o, o, o, o, o|],
@@ -249,17 +250,17 @@ describe("Game.update", () => {
           [|o, o, o, s, o|],
           [|o, o, o, o, x|],
         |]);
-      let action = ToggleMarker((3, 2));
+      let action = ToggleMarker({x: 3, y: 2});
       let update = update(action, initialState);
       expect(update) |> toBe(initialState);
     });
     test("does nothing in Lost state", () => {
-      let action = ToggleMarker((3, 0));
+      let action = ToggleMarker({x: 3, y: 0});
       let update = update(action, initialLostState);
       expect(update) |> toBe(initialLostState);
     });
     test("does nothing in Won state", () => {
-      let action = ToggleMarker((3, 1));
+      let action = ToggleMarker({x: 3, y: 1});
       let update = update(action, initialWonState);
       expect(update) |> toBe(initialWonState);
     });
@@ -283,23 +284,23 @@ describe("Game.gameStatusSelector", () => {
 
 describe("Game.adjacentMinesCountSelector", () => {
   test("returns 0 if no Mines in field neighbourhood", () => {
-    let mines = adjacentMinesCountSelector(initialState, (2, 1));
+    let mines = adjacentMinesCountSelector(initialState, {x: 2, y: 1});
     expect(mines) |> toBe(0);
   });
   test("returns 0 if no Mines in field neighbourhood (board corner)", () => {
-    let mines = adjacentMinesCountSelector(initialState, (0, 0));
+    let mines = adjacentMinesCountSelector(initialState, {x: 0, y: 0});
     expect(mines) |> toBe(0);
   });
   test("returns 0 if no Mines in field neighbourhood (board side)", () => {
-    let mines = adjacentMinesCountSelector(initialState, (4, 1));
+    let mines = adjacentMinesCountSelector(initialState, {x: 4, y: 1});
     expect(mines) |> toBe(0);
   });
   test("returns 1 if one Mine in field neighbourhood", () => {
-    let mines = adjacentMinesCountSelector(initialState, (1, 1));
+    let mines = adjacentMinesCountSelector(initialState, {x: 1, y: 1});
     expect(mines) |> toBe(1);
   });
   test("returns n if n Mines in field neighbourhood", () => {
-    let mines = adjacentMinesCountSelector(initialState, (3, 2));
+    let mines = adjacentMinesCountSelector(initialState, {x: 3, y: 2});
     expect(mines) |> toBe(2);
   });
 });

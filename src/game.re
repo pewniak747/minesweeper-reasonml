@@ -50,7 +50,7 @@ module FieldsSet = {
   let empty: t = Set.make(~id=(module FieldsComparator));
 
   let fromList = (input: list(FieldsComparator.t)): t =>
-    input |> List.toArray |> Set.mergeMany(empty);
+    input->List.toArray->Set.mergeMany(empty, _);
 };
 
 type state = {
@@ -66,7 +66,7 @@ type action =
 
 let neighbourDiff =
   cartesian([(-1), 0, 1], [(-1), 0, 1])
-  |> List.keep(_, ((x, y)) => x != 0 || y != 0);
+  ->List.keep(((x, y)) => x != 0 || y != 0);
 
 if (List.length(neighbourDiff) != 8) {
   failwith("nighbourDiff should contain exactly 8 items");
@@ -80,8 +80,8 @@ let fieldNeighboursSelector = (state: state, field: field): list(field) => {
   let {width, height} = state;
   let {x, y} = field;
   neighbourDiff
-  |> List.map(_, ((dx, dy)) => {x: x + dx, y: y + dy})
-  |> List.keep(_, ({x, y}) => x >= 0 && x < width && y >= 0 && y < height);
+  ->List.map(((dx, dy)) => {x: x + dx, y: y + dy})
+  ->List.keep(({x, y}) => x >= 0 && x < width && y >= 0 && y < height);
 };
 
 let fieldsSelector = (state: state): list((field, fieldState)) =>
@@ -92,24 +92,22 @@ let fieldStateSelector = (state: state, field: field): fieldState =>
 
 let adjacentMinesCountSelector = (state: state, field: field): int =>
   fieldNeighboursSelector(state, field)
-  |> List.map(_, neighbour => fieldStateSelector(state, neighbour))
-  |> List.keep(_, ({contents}) => contents == Mine)
-  |> List.length;
+  ->List.map(neighbour => fieldStateSelector(state, neighbour))
+  ->List.keep(({contents}) => contents == Mine)
+  ->List.length;
 
 let minesCountSelector = (state: state): int =>
-  state.fields
-  |> Map.keep(_, (_, {contents}) => contents == Mine)
-  |> Map.size;
+  state.fields->Map.keep((_, {contents}) => contents == Mine)->Map.size;
 
 let markedCountSelector = (state: state): int =>
   state.fields
-  |> Map.keep(_, (_, {visibility}) => visibility == Marked)
-  |> Map.size;
+  ->Map.keep((_, {visibility}) => visibility == Marked)
+  ->Map.size;
 
 let revealedCountSelector = (state: state): int =>
   state.fields
-  |> Map.keep(_, (_, {visibility}) => visibility == Revealed)
-  |> Map.size;
+  ->Map.keep((_, {visibility}) => visibility == Revealed)
+  ->Map.size;
 
 let remainingMinesCountSelector = (state: state): int => {
   let mines = minesCountSelector(state);
@@ -166,7 +164,7 @@ let initializeState = (~width: int, ~height: int, ~mines: int): state => {
   if (List.length(fields) <= mines) {
     failwith("Too many mines for the board");
   };
-  let minedFields = fields |> shuffle |> take(mines) |> FieldsSet.fromList;
+  let minedFields = fields->shuffle |> take(mines) |> FieldsSet.fromList;
   let makeFieldWithContents = field => {
     let contents = Set.has(minedFields, field) ? Mine : Safe;
     (field, contents);
@@ -209,7 +207,7 @@ let rec accumulateFieldsToReveal = (state, field, acc) => {
       Set.has(acc, neighbour)
         ? acc : accumulateFieldsToReveal(state, neighbour, acc);
     fieldNeighboursSelector(state, field)
-    |> List.reduce(_, accWithFieldRevealed, visitNeighbour);
+    ->List.reduce(accWithFieldRevealed, visitNeighbour);
   | (_, Safe | Mine) => accWithFieldRevealed
   };
 };
@@ -275,8 +273,8 @@ let update = (action, state) =>
       if (List.length(markedNeighbours) == mines) {
         let toReveal =
           nonMarkedNeighbours
-          |> List.map(_, fieldsToReveal(state))
-          |> List.reduce(_, FieldsSet.empty, Set.union);
+          ->List.map(fieldsToReveal(state))
+          ->List.reduce(FieldsSet.empty, Set.union);
         let fields = revealFields(state, toReveal);
         {...state, fields};
       } else {

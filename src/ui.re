@@ -1,6 +1,12 @@
 open Utils;
 
 module Field = {
+  type display =
+    | Hidden
+    | Marked
+    | Safe({mines: int})
+    | Exploded;
+
   [@react.component]
   let make =
       (
@@ -10,36 +16,37 @@ module Field = {
         ~onClick: Game.field => unit,
         ~onDoubleClick: Game.field => unit,
       ) => {
-    let buttonContent =
+    let display =
       switch (fieldState) {
-      | {visibility: Hidden} => ""
-      | {visibility: Marked} => {js|🚩|js}
-      | {visibility: Revealed, contents: Safe} => mines |> string_of_int
-      | {visibility: Revealed, contents: Mine} => {js|💥|js}
+      | {visibility: Hidden} => Hidden
+      | {visibility: Marked} => Marked
+      | {visibility: Revealed, contents: Safe} => Safe({mines: mines})
+      | {visibility: Revealed, contents: Mine} => Exploded
+      };
+    let buttonContent =
+      switch (display) {
+      | Hidden => ""
+      | Marked => {js|🚩|js}
+      | Safe({mines}) => mines |> string_of_int
+      | Exploded => {js|💥|js}
       };
     let baseClassName = "game__board-field";
     let revealedClassName =
-      switch (fieldState) {
-      | {visibility: Revealed} => {j|$baseClassName--revealed|j}
-      | _ => ""
+      switch (display) {
+      | Safe(_)
+      | Exploded => {j|$baseClassName--revealed|j}
+      | Hidden
+      | Marked => ""
       };
-    let minesClassName =
-      switch (fieldState) {
-      | {visibility: Revealed, contents: Safe} => {j|$baseClassName--$mines|j}
-      | _ => ""
-      };
-    let explosionClassName =
-      switch (fieldState) {
-      | {visibility: Revealed, contents: Mine} => {j|$baseClassName--exploded|j}
-      | _ => ""
+    let contentClassName =
+      switch (display) {
+      | Safe({mines}) => {j|$baseClassName--$mines|j}
+      | Exploded => {j|$baseClassName--exploded|j}
+      | Hidden
+      | Marked => ""
       };
     let className =
-      Cn.make([
-        baseClassName,
-        revealedClassName,
-        minesClassName,
-        explosionClassName,
-      ]);
+      Cn.make([baseClassName, revealedClassName, contentClassName]);
     let onClick = _evt => onClick(field);
     let onDoubleClick = _event => onDoubleClick(field);
     <Double_click onClick onDoubleClick>

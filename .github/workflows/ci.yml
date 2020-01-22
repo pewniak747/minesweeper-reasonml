@@ -19,4 +19,8 @@ jobs:
     - run: yarn test
       env:
         CI: true
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@b6c65be
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - run: yarn deploy

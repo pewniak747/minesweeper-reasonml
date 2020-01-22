@@ -1,3 +1,4 @@
+![build status](https://github.com/pewniak747/minesweeper-reasonml/workflows/CI/badge.svg)
 # Minesweeper
 
 Written in [ReasonML][ReasonML] and [React][ReasonReact] 😎

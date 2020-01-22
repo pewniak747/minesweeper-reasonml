@@ -1,14 +1,22 @@
 {
-  "main.css": "/minesweeper-reasonml/static/css/main.12009f80.chunk.css",
-  "main.js": "/minesweeper-reasonml/static/js/main.225c9a90.chunk.js",
-  "main.js.map": "/minesweeper-reasonml/static/js/main.225c9a90.chunk.js.map",
-  "static/js/1.4d7a3be0.chunk.js": "/minesweeper-reasonml/static/js/1.4d7a3be0.chunk.js",
-  "static/js/1.4d7a3be0.chunk.js.map": "/minesweeper-reasonml/static/js/1.4d7a3be0.chunk.js.map",
-  "runtime~main.js": "/minesweeper-reasonml/static/js/runtime~main.d2c2ef3f.js",
-  "runtime~main.js.map": "/minesweeper-reasonml/static/js/runtime~main.d2c2ef3f.js.map",
-  "static/media/logo.svg": "/minesweeper-reasonml/static/media/logo.e2342b05.svg",
-  "static/css/main.12009f80.chunk.css.map": "/minesweeper-reasonml/static/css/main.12009f80.chunk.css.map",
-  "index.html": "/minesweeper-reasonml/index.html",
-  "precache-manifest.e447e77b974558f587a882d5f4064283.js": "/minesweeper-reasonml/precache-manifest.e447e77b974558f587a882d5f4064283.js",
-  "service-worker.js": "/minesweeper-reasonml/service-worker.js"
+  "files": {
+    "main.css": "/minesweeper-reasonml/static/css/main.9c0bbada.chunk.css",
+    "main.js": "/minesweeper-reasonml/static/js/main.4c0551a6.chunk.js",
+    "main.js.map": "/minesweeper-reasonml/static/js/main.4c0551a6.chunk.js.map",
+    "runtime-main.js": "/minesweeper-reasonml/static/js/runtime-main.6febfa83.js",
+    "runtime-main.js.map": "/minesweeper-reasonml/static/js/runtime-main.6febfa83.js.map",
+    "static/js/2.ced77b94.chunk.js": "/minesweeper-reasonml/static/js/2.ced77b94.chunk.js",
+    "static/js/2.ced77b94.chunk.js.map": "/minesweeper-reasonml/static/js/2.ced77b94.chunk.js.map",
+    "index.html": "/minesweeper-reasonml/index.html",
+    "precache-manifest.c99af5a969dc5ecd0e7a7809693a81fb.js": "/minesweeper-reasonml/precache-manifest.c99af5a969dc5ecd0e7a7809693a81fb.js",
+    "service-worker.js": "/minesweeper-reasonml/service-worker.js",
+    "static/css/main.9c0bbada.chunk.css.map": "/minesweeper-reasonml/static/css/main.9c0bbada.chunk.css.map",
+    "static/media/logo.svg": "/minesweeper-reasonml/static/media/logo.e2342b05.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.6febfa83.js",
+    "static/js/2.ced77b94.chunk.js",
+    "static/css/main.9c0bbada.chunk.css",
+    "static/js/main.4c0551a6.chunk.js"
+  ]
 }

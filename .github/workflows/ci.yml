@@ -27,4 +27,4 @@ jobs:
       run: |
         git config user.email "pewniak747+minesweeper-reasonml@gmail.com"
         git config user.name "deploy"
-        NODE_DEBUG=gh-pages yarn deploy
+        NODE_DEBUG=gh-pages yarn deploy --repo git@github.com:pewniak747/minesweeper-reasonml.git

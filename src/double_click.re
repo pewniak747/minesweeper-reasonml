@@ -8,11 +8,11 @@ let make = (~onClick as onSingleClick, ~onDoubleClick, ~children) => {
   let onClick = evt => {
     ReactEvent.Synthetic.preventDefault(evt);
     let now = Js.Date.now();
-    let lastClickAt = React.Ref.current(lastClickAtRef);
+    let lastClickAt = lastClickAtRef.React.current;
     let isDoubleClick = lastClickAt +. thresholdMs > now;
-    React.Ref.setCurrent(lastClickAtRef, now);
+    lastClickAtRef.React.current = now;
 
-    switch (React.Ref.current(timeoutIdRef)) {
+    switch (timeoutIdRef.React.current) {
     | Some(id) => Js.Global.clearTimeout(id)
     | None => ()
     };
@@ -25,7 +25,7 @@ let make = (~onClick as onSingleClick, ~onDoubleClick, ~children) => {
         thresholdMs
         |> int_of_float
         |> Js.Global.setTimeout(() => onSingleClick(evt));
-      React.Ref.setCurrent(timeoutIdRef, Some(timeoutId));
+      timeoutIdRef.React.current = Some(timeoutId);
     };
   };
 

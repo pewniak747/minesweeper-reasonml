@@ -25,10 +25,10 @@ module Field = {
       };
     let buttonContent =
       switch (display) {
-      | Hidden => ""
-      | Marked => {js|🚩|js}
-      | Safe({mines}) => mines |> string_of_int
-      | Exploded => {js|💥|js}
+      | Hidden => React.null
+      | Marked => React.string({js|🚩|js})
+      | Safe({mines}) => React.int(mines)
+      | Exploded => React.string({js|💥|js})
       };
     let baseClassName = "game__board-field";
     let revealedClassName =
@@ -50,9 +50,7 @@ module Field = {
     let onClick = _evt => onClick(field);
     let onDoubleClick = _event => onDoubleClick(field);
     <Double_click onClick onDoubleClick>
-      <div className>
-        <button type_="button"> {React.string(buttonContent)} </button>
-      </div>
+      <div className> <button type_="button"> buttonContent </button> </div>
     </Double_click>;
   };
 
@@ -132,7 +130,7 @@ module Game = {
       <div className="game">
         <div className="game__header">
           <div className="game__remaining-mines">
-            {React.string(string_of_int(remainingMines))}
+            {React.int(remainingMines)}
           </div>
           <button
             type_="button"

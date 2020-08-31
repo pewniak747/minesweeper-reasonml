@@ -2,50 +2,50 @@ open Jest
 
 open Expect
 
-open! Game
+open! Minesweeper
 
 open Utils
 
 module List = Belt.List
 
-describe("Game.initializeState", _ => {
+describe("Minesweeper.initializeState", _ => {
   let state = initializeState(~width=3, ~height=4, ~mines=5)
   test("constructs a new Playing game state", _ => {
     let status = gameStatusSelector(state)
     expect(status) |> toBe(Playing)
   })
   test("constructs a game state with correct board width", () =>
-    expect(Game.gameWidthSelector(state)) |> toBe(3)
+    expect(Minesweeper.gameWidthSelector(state)) |> toBe(3)
   )
   test("constructs a game state with correct board height", () =>
-    expect(Game.gameHeightSelector(state)) |> toBe(4)
+    expect(Minesweeper.gameHeightSelector(state)) |> toBe(4)
   )
   test("constructs a game state with correct number of fields", () => {
-    let count = state |> Game.fieldsSelector |> List.length
+    let count = state |> Minesweeper.fieldsSelector |> List.length
     expect(count) |> toBe(12)
   })
   test("constructs a game state with correct number of Mine fields", () => {
     let onlyMined = fields => List.keep(fields, ((_, {contents})) => contents == Mine)
-    let mines = state |> Game.fieldsSelector |> onlyMined |> List.length
+    let mines = state |> Minesweeper.fieldsSelector |> onlyMined |> List.length
     expect(mines) |> toBe(5)
   })
   test("constructs a game state with all fields Hidden", () => {
     let isHidden = ((_field, {visibility})) => visibility == Hidden
-    expect(List.every(Game.fieldsSelector(state), isHidden)) |> toBe(true)
+    expect(List.every(Minesweeper.fieldsSelector(state), isHidden)) |> toBe(true)
   })
 })
 
 let makeState = (matrix): state => {
   let height = Array.length(matrix)
   let width = Array.length(matrix[0])
-  let fields: list<Game.field> =
+  let fields: list<Minesweeper.field> =
     cartesian(range(0, width), range(0, height))->List.map(((x, y)) => {x: x, y: y})
   let fieldsWithState = List.map(fields, field => {
     let {x, y} = field
     let data = matrix[y][x]
     (field, data)
   })
-  Game.makeStateWithFieldsState(~width, ~height, ~fieldsWithState)
+  Minesweeper.makeStateWithFieldsState(~width, ~height, ~fieldsWithState)
 }
 
 let m = {contents: Mine, visibility: Revealed}
@@ -76,7 +76,7 @@ let initialWonState = makeState([
   [s, s, s, s, x],
 ])
 
-describe("Game.update", () => {
+describe("Minesweeper.update", () => {
   describe("Init action", () => test("replaces the state with new one", () => {
       let expectedState = initializeState(~width=10, ~height=8, ~mines=5)
       let update = update(Init(expectedState), initialState)
@@ -235,7 +235,7 @@ describe("Game.update", () => {
   })
 })
 
-describe("Game.gameStatusSelector", () => {
+describe("Minesweeper.gameStatusSelector", () => {
   test("is Lost if any of the Mine fields are Revealed", () => {
     let status = gameStatusSelector(initialLostState)
     expect(status) |> toBe(Lost)
@@ -250,7 +250,7 @@ describe("Game.gameStatusSelector", () => {
   })
 })
 
-describe("Game.adjacentMinesCountSelector", () => {
+describe("Minesweeper.adjacentMinesCountSelector", () => {
   test("returns 0 if no Mines in field neighbourhood", () => {
     let mines = adjacentMinesCountSelector(initialState, {x: 2, y: 1})
     expect(mines) |> toBe(0)
@@ -273,7 +273,7 @@ describe("Game.adjacentMinesCountSelector", () => {
   })
 })
 
-describe("Game.remainingMinesCountSelector", () =>
+describe("Minesweeper.remainingMinesCountSelector", () =>
   test("returns the number of mines minus the number of marked fields", () => {
     let state = makeState([[o, o, o, o, o], [o, o, fx, o, o], [o, o, o, s, o], [x, o, o, o, fx]])
     expect(remainingMinesCountSelector(state)) |> toBe(1)

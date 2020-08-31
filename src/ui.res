@@ -1,5 +1,39 @@
 open Utils
 
+module Double_click = {
+  let thresholdMs = 200.0
+
+  @react.component
+  let make = (~onClick as onSingleClick, ~onDoubleClick, ~children) => {
+    let lastClickAtRef = React.useRef(0.0)
+    let timeoutIdRef = React.useRef(None)
+
+    let onClick = evt => {
+      ReactEvent.Synthetic.preventDefault(evt)
+      let now = Js.Date.now()
+      let lastClickAt = lastClickAtRef.React.current
+      let isDoubleClick = lastClickAt +. thresholdMs > now
+      lastClickAtRef.React.current = now
+
+      switch timeoutIdRef.React.current {
+      | Some(id) => Js.Global.clearTimeout(id)
+      | None => ()
+      }
+
+      if isDoubleClick {
+        onDoubleClick(evt)
+      } else {
+        ReactEvent.Synthetic.persist(evt)
+        let timeoutId =
+          thresholdMs |> int_of_float |> Js.Global.setTimeout(() => onSingleClick(evt))
+        timeoutIdRef.React.current = Some(timeoutId)
+      }
+    }
+
+    <div onClick> children </div>
+  }
+}
+
 module Field = {
   type display =
     | Hidden
@@ -10,10 +44,10 @@ module Field = {
   @react.component
   let make = (
     ~mines: int,
-    ~field: Game.field,
-    ~fieldState: Game.fieldState,
-    ~onClick: Game.field => unit,
-    ~onDoubleClick: Game.field => unit,
+    ~field: Minesweeper.field,
+    ~fieldState: Minesweeper.fieldState,
+    ~onClick: Minesweeper.field => unit,
+    ~onDoubleClick: Minesweeper.field => unit,
   ) => {
     let display = switch fieldState {
     | {visibility: Hidden} => Hidden
@@ -29,12 +63,12 @@ module Field = {
     }
     let baseClassName = "game__board-field"
     let revealedClassName = switch display {
-    | Safe(_) | Exploded => j`$baseClassName--revealed`
+    | Safe(_) | Exploded => `${baseClassName}--revealed`
     | Hidden | Marked => ""
     }
     let contentClassName = switch display {
-    | Safe({mines}) => j`$baseClassName--$mines`
-    | Exploded => j`$baseClassName--exploded`
+    | Safe({mines}) => `${baseClassName}--${string_of_int(mines)}`
+    | Exploded => `${baseClassName}--exploded`
     | Hidden | Marked => ""
     }
     let className = Cn.make(list{baseClassName, revealedClassName, contentClassName})
@@ -46,8 +80,8 @@ module Field = {
   }
 
   let arePropsEqual = (oldProps, newProps) => {
-    let oldState: Game.fieldState = oldProps["fieldState"]
-    let newState: Game.fieldState = newProps["fieldState"]
+    let oldState: Minesweeper.fieldState = oldProps["fieldState"]
+    let newState: Minesweeper.fieldState = newProps["fieldState"]
     oldState === newState
   }
 
@@ -55,28 +89,28 @@ module Field = {
 }
 
 module Game = {
-  type action = Game.action
+  type action = Minesweeper.action
 
-  type state = Game.state
+  type state = Minesweeper.state
 
-  let reducer = (state, action) => Game.update(action, state)
+  let reducer = (state, action) => Minesweeper.update(action, state)
 
   @react.component
   let make = (~width: int, ~height: int, ~mines: int) => {
     let (state, send) = React.useReducerWithMapState(reducer, (), () =>
-      Game.initializeState(~width, ~height, ~mines)
+      Minesweeper.initializeState(~width, ~height, ~mines)
     )
-    let width = Game.gameWidthSelector(state)
-    let height = Game.gameHeightSelector(state)
+    let width = Minesweeper.gameWidthSelector(state)
+    let height = Minesweeper.gameHeightSelector(state)
     let xs = range(0, width)
     let ys = range(0, height)
-    let gameStatus = Game.gameStatusSelector(state)
+    let gameStatus = Minesweeper.gameStatusSelector(state)
     let rows =
       List.map(ys, y =>
         <div className="game__board-row" key={string_of_int(y)}> {List.map(xs, x => {
-            let field: Game.field = {x: x, y: y}
-            let fieldState = Game.fieldStateSelector(state, field)
-            let displayedFieldState: Game.fieldState = switch (gameStatus, fieldState) {
+            let field: Minesweeper.field = {x: x, y: y}
+            let fieldState = Minesweeper.fieldStateSelector(state, field)
+            let displayedFieldState: Minesweeper.fieldState = switch (gameStatus, fieldState) {
             | (Won, {contents: Mine}) => {
                 contents: Mine,
                 visibility: Marked,
@@ -85,7 +119,7 @@ module Game = {
             }
             let onClick = field => send(ToggleMarker(field))
             let onDoubleClick = field => send(Reveal(field))
-            let mines = Game.adjacentMinesCountSelector(state, field)
+            let mines = Minesweeper.adjacentMinesCountSelector(state, field)
             <Field
               field
               mines
@@ -103,8 +137,8 @@ module Game = {
     | Won => `😎`
     | Lost => `😵`
     }
-    let startButtonClick = _evt => send(Init(Game.initializeState(~width, ~height, ~mines)))
-    let remainingMines = Game.remainingMinesCountSelector(state)
+    let startButtonClick = _evt => send(Init(Minesweeper.initializeState(~width, ~height, ~mines)))
+    let remainingMines = Minesweeper.remainingMinesCountSelector(state)
     <section className="game__wrapper">
       <div className="game">
         <div className="game__header">
@@ -119,5 +153,68 @@ module Game = {
         {React.string("double-click to reveal a field / click to mark a field")}
       </p>
     </section>
+  }
+}
+
+module App = {
+  let logo: string = %bs.raw(`require('./logo.svg')`)
+
+  type difficulty =
+    | Easy
+    | Normal
+    | Hard
+
+  type state = option<difficulty>
+
+  type action = ChooseDifficulty(difficulty)
+
+  let reducer = (_state: state, action: action) =>
+    switch action {
+    | ChooseDifficulty(difficulty) => Some(difficulty)
+    }
+
+  @react.component
+  let make = (~message) => {
+    let (state, send) = React.useReducer(reducer, None)
+    let contents = switch state {
+    | None =>
+      let choose = (difficulty, _evt) => send(ChooseDifficulty(difficulty))
+      <div className="difficulties__wrapper">
+        <h3> {React.string("Choose difficulty")} </h3>
+        <div className="difficulties">
+          <button type_="button" className="difficulty" onClick={choose(Easy)} title="Easy">
+            {React.string(`😌`)}
+          </button>
+          <button type_="button" className="difficulty" onClick={choose(Normal)} title="Normal">
+            {React.string(`😐`)}
+          </button>
+          <button type_="button" className="difficulty" onClick={choose(Hard)} title="Hard">
+            {React.string(`😱`)}
+          </button>
+        </div>
+      </div>
+    | Some(difficulty) =>
+      let (width, height, mines) = switch difficulty {
+      | Easy => (9, 9, 10)
+      | Normal => (16, 16, 40)
+      | Hard => (30, 16, 99)
+      }
+      <Game width height mines />
+    }
+    <div className="app">
+      <div className="app__header">
+        <a href=""> <img src=logo className="app__logo" alt="logo" /> </a>
+        <h2> {React.string(message)} </h2>
+        <p className="app__credits">
+          {React.string("by ")}
+          <a href="http://pewniak747.info" target="_blank"> {React.string(`Tomasz Pewiński`)} </a>
+          {React.string(` · `)}
+          <a href="https://github.com/pewniak747/minesweeper-reasonml" target="_blank">
+            {React.string("source")}
+          </a>
+        </p>
+      </div>
+      <div className="app__intro"> contents </div>
+    </div>
   }
 }

@@ -1,7 +1,7 @@
 ![build status](https://github.com/pewniak747/minesweeper-reasonml/workflows/CI/badge.svg)
 # Minesweeper
 
-Written in [ReasonML][ReasonML] and [React][ReasonReact] 😎
+Written in ~[ReasonML][ReasonML]~ now [ReScript][ReScript] and [React][ReasonReact] 😎
 
 https://pewniak747.github.io/minesweeper-reasonml
 
@@ -30,4 +30,5 @@ yarn re:build && yarn test
 ```
 
 [ReasonML]: https://reasonml.github.io
+[ReScript]: https://rescript-lang.org
 [ReasonReact]: https://reasonml.github.io/reason-react

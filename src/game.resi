@@ -18,26 +18,26 @@
 type field = {
   x: int,
   y: int,
-};
+}
 
 type fieldVisibility =
   | Hidden
   | Revealed
-  | Marked;
+  | Marked
 
 type fieldContents =
   | Mine
-  | Safe;
+  | Safe
 
 type fieldState = {
   contents: fieldContents,
   visibility: fieldVisibility,
-};
+}
 
 type gameStatus =
   | Playing
   | Won
-  | Lost;
+  | Lost
 
 /**
  * GAME STATE
@@ -45,7 +45,7 @@ type gameStatus =
  * The current game state is an abstract type in order to avoid leaking
  * of the implementation details.
  */
-type state;
+type state
 
 /**
  * GAME ACTIONS
@@ -53,40 +53,42 @@ type state;
 type action =
   | Init(state)
   | Reveal(field)
-  | ToggleMarker(field);
+  | ToggleMarker(field)
 
 /**
  * Returns a game state with given width, height and a defined number
  * of mines scattered randomly.
  */
-let initializeState: (~width: int, ~height: int, ~mines: int) => state;
+let initializeState: (~width: int, ~height: int, ~mines: int) => state
 
 /**
  * Returns a game state with all fields in defined states (not random).
  * This is useful in tests, when needing to recreate a specific game state.
  */
-let makeStateWithFieldsState:
-  (~width: int, ~height: int, ~fieldsWithState: list((field, fieldState))) =>
-  state;
+let makeStateWithFieldsState: (
+  ~width: int,
+  ~height: int,
+  ~fieldsWithState: list<(field, fieldState)>,
+) => state
 
 /**
  * SELECTORS
  */
-let gameWidthSelector: state => int;
+let gameWidthSelector: state => int
 
-let gameHeightSelector: state => int;
+let gameHeightSelector: state => int
 
-let gameStatusSelector: state => gameStatus;
+let gameStatusSelector: state => gameStatus
 
-let fieldsSelector: state => list((field, fieldState));
+let fieldsSelector: state => list<(field, fieldState)>
 
-let fieldStateSelector: (state, field) => fieldState;
+let fieldStateSelector: (state, field) => fieldState
 
-let adjacentMinesCountSelector: (state, field) => int;
+let adjacentMinesCountSelector: (state, field) => int
 
-let remainingMinesCountSelector: state => int;
+let remainingMinesCountSelector: state => int
 
 /**
  * UPDATE FUNCTION
  */
-let update: (action, state) => state;
+let update: (action, state) => state
